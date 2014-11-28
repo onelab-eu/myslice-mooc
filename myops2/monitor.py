@@ -4,6 +4,7 @@ import sys, os, signal, time
 import sqlite3
 import Queue
 import threading
+import db
 
 from planetlab.query import Query
 # from planetlab.test import Service
@@ -16,36 +17,30 @@ def receive_signal(signum, stack):
     
 def worker(num, input, output):
     print 'Worker: %s' % num
+    resource = {}
     while True :
-        conn = sqlite3.connect('nodes.db')
-        c = conn.cursor()
-        
-        status = 'up'
+        resource.hostname = node.hostname
+        resource.site_name = node.site
+        resource.status = 'up'
         
         node = input.get()
 
         if not node.enabled:
-            print "!ENABLED %s (%s)" % (node, node.site)
-            status = 'disabled'
+            print "!ENABLED %s (%s)" % (resource.hostname, resource.site_name)
+            resource.status = 'disabled'
         
         elif not node.is_running() :
-            print "!RUN %s (%s)" % (node, node.site)
-            status = 'down'
+            print "!RUN %s (%s)" % (resource.hostname, resource.site_name)
+            resource.status = 'down'
 
         elif not node.is_accessible() :
-            print "!ACC %s (%s)" % (node, node.site)
-            status = 'no access'
+            print "!ACC %s (%s)" % (resource.hostname, resource.site_name)
+            resource.status = 'no access'
         
-        print "OK %s (%s)" % (node, node.site)
+        print "OK %s (%s)" % (resource.hostname, resource.site_name)
         
-        c.execute("SELECT hostname FROM monitor WHERE hostname='%s'" % (node.hostname))
-        if c.fetchone() :
-            c.execute("UPDATE monitor SET status='%s' WHERE hostname='%s'" % (status, node.hostname))
-        else :
-            c.execute("INSERT INTO monitor (hostname,site,status) VALUES ('%s','%s','%s')" % (node.hostname,node.site.name,status))
+        db.update(resource)
         
-        conn.commit()
-        conn.close()
         output.put(node)
     #input.task_done()
             
@@ -53,22 +48,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, receive_signal)
     #signal.signal(signal.SIGUSR2, receive_signal)
 
-    ''' create sqlite table '''  
-#     conn = sqlite3.connect('nodes.db')
-#     c = conn.cursor()
-#     c.execute('''CREATE TABLE monitor (
-#         hostname text,
-#         site text,
-#         ipv4 text,
-#         ipv6 text,
-#         distro text,
-#         kernel text,
-#         cores integer,
-#         cpu text,
-#         ram text,
-#         disk text,
-#         status text,
-#         checked integer)''')
     
     ''' input queue '''
     input = Queue.Queue()
