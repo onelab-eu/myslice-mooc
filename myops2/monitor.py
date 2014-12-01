@@ -41,17 +41,17 @@ def agent(num, input):
         availability = 1
         status = "up"
         
-        if not node.enabled:
+        if not resource.enabled:
             print "+=> %s is not enabled" % (resource.hostname)
             availability = 0
             status = "disabled"
         
-        elif not node.is_running() :
+        elif not resource.is_running() :
             print "+=> %s is not running" % (resource.hostname)
             availability = 0
             status = "down"
 
-        elif not node.is_accessible() :
+        elif not resource.is_accessible() :
             print "+=> %s is not accessible" % (resource.hostname)
             availability = 0
             status = "no access"
@@ -90,7 +90,8 @@ if __name__ == '__main__':
         resources = d.select_resources()
         if resources :
             for resource in resources :
-                input.put(resource)
+                node = Query('Nodes').hostname(resource.hostname).first()
+                input.put(node)
         #print 'checked: %s' % (ret)
         #input.put(ret)
         time.sleep(900)
