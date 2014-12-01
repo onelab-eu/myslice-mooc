@@ -37,8 +37,6 @@ def agent(num, input):
     
     while True :
         resource = input.get()
-        availability = 1
-        status = "up"
         
         if not resource.enabled:
             print "+=> %s is not enabled" % (resource.hostname)
@@ -54,6 +52,10 @@ def agent(num, input):
             print "+=> %s is not accessible" % (resource.hostname)
             availability = 0
             status = "no access"
+        else :
+            print "+=> %s is ok" % (resource.hostname)
+            availability = 1
+            status = "up"
         
         ''' send OML stream '''
         oml.availability(resource.hostname, availability)
