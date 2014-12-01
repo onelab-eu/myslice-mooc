@@ -72,7 +72,6 @@ if __name__ == '__main__':
     ''' resources thread '''
     t = threading.Thread(target=resources)
     t.daemon = True
-    threads.append(t)
     t.start()
         
     ''' agent threads '''
