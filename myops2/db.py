@@ -1,4 +1,4 @@
-import sys, os, signal, time, datetime
+import sys, os, signal, time
 import psycopg2
 
 class db(object) :
@@ -21,13 +21,12 @@ class db(object) :
 
         if not resource.hostname :
             raise Exception("Resource name must be specified")
-            return False
     
         try:
             self.cursor.execute("SELECT hostname FROM resources WHERE hostname='%s'" % (resource.hostname))
-            if not cursor.fetchone() :
+            if not self.cursor.fetchone() :
+                print "+=> Inserting %s" % (resource.hostname)
                 self.cursor.execute("INSERT INTO resources (hostname,site) VALUES ('%s','%s')" % (resource.hostname,resource.site_name)) 
-            
         except:
             raise Exception("Unable to update database")
 

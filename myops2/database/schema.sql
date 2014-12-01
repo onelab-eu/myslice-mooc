@@ -1,9 +1,9 @@
 CREATE TABLE resources (
 	hostname text UNIQUE,
 	site text,
-	ipv4 inet UNIQUE,
-	ipv6 inet UNIQUE,
-	mac macaddr UNIQUE,
+	ipv4 inet,
+	ipv6 inet,
+	mac macaddr,
 	distro text,
 	kernel text,
 	cores integer,
