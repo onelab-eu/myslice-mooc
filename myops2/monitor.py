@@ -4,7 +4,8 @@ import sys, os, signal, time, datetime
 import sqlite3
 import Queue
 import threading
-import db, oml
+from db import db
+import oml
 
 from planetlab.query import Query
 # from planetlab.test import Service
