@@ -6,11 +6,11 @@ from oml4py import OMLBase
     status is 1 or 0 (up or down)
 '''
 def availability(resource, status) :
-    oml = OMLBase("Infrastructure","PLE","PLETestbed","tcp:localhost:3003")
+    oml = OMLBase("","PLE","PLETestbed","tcp:localhost:3003")
     
     oml.addmp("availability", "node:string up:double last_check:string")
     oml.start()
     
-    oml.inject("availability", (1, resource, datetime.now().isoformat()))
+    oml.inject("availability", (resource, 1, datetime.now().isoformat()  + "+01:00"))
     
     oml.close()
