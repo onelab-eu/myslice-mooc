@@ -22,10 +22,12 @@ def worker(num, input, output):
         
         node = input.get()
         
-        resource.hostname = node.hostname
-        resource.site_name = node.site
-        resource.status = 'up'
-        resource.availability = 1
+        resource = { 
+            'hostname': node.hostname,
+            'site_name': node.site,
+            'status': 'up',
+            'availability': 1
+        }
 
         if not node.enabled:
             print "!ENABLED %s (%s)" % (resource.hostname, resource.site_name)
