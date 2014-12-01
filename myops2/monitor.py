@@ -89,7 +89,7 @@ if __name__ == '__main__':
         resources = d.select_resources()
         if resources :
             for resource in resources :
-                node = Query('Nodes').hostname(resource['hostname']).first()
+                node = Query('Nodes').hostname(resource['hostname']).execute().first()
                 input.put(node)
         #print 'checked: %s' % (ret)
         #input.put(ret)
