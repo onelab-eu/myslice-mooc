@@ -14,7 +14,13 @@ from planetlab.query import Query
 def receive_signal(signum, stack):
     print 'Received:', signum
     raise SystemExit('Exiting')
-    
+
+''' There will be only one thread that every X minutes gets a node from the db
+'''
+
+
+''' take a resource from the queue and starts checks
+'''
 def worker(num, input, output):
     print 'Worker: %s' % num
     while True :
@@ -43,7 +49,7 @@ def worker(num, input, output):
             resource['status'] = 'no access'
             resource['availability'] = 0
         
-        print "OK %s (%s)" % (resource['hostname'], resource['site_name'])
+        #print "OK %s (%s)" % (resource['hostname'], resource['site_name'])
         
         #db.update(resource)
         
