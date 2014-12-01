@@ -1,7 +1,6 @@
 #!/usr/bin/env python 
 
 import sys, os, signal, time, datetime
-import sqlite3
 import Queue
 import threading
 from db import db

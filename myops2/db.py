@@ -1,12 +1,12 @@
 import sys, os, signal, time
-import psycopg2
+import psycopg2, psycopg2.extras
 
 class db(object) :
 
     def __init__(self):
         try:
             self.conn = psycopg2.connect("dbname='myops2' user='myops2' host='localhost' password='IChVVyCbxrhA'")
-            self.cursor = self.conn.cursor()
+            self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         except:
             raise Exception("Unable to connect to the database")
 
