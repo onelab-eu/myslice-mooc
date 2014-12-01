@@ -15,13 +15,27 @@ def receive_signal(signum, stack):
     print 'Received:', signum
     raise SystemExit('Exiting')
 
-''' There will be only one thread that every X minutes gets a node from the db
+''' A thread that will check if new resources have been added
 '''
+def resources():
+    print "Reteiving resources " + datetime.datetime.now()
+    db = db()
+    ''' PLE nodes '''
+    nodes = Query('Nodes').ple().execute()
+    for node in nodes :
+        db.update_resource(node)
+    db.commit()
+    db.close()
 
-
-''' take a resource from the queue and starts checks
+''' A thread that that will wekup with a timer and return the resources 
+    that need to be monitored
 '''
-def worker(num, input, output):
+def monitor():
+    pass
+
+''' A thread that will check resource availability and information
+'''
+def agent(num, input, output):
     print 'Worker: %s' % num
     while True :
         
@@ -63,21 +77,20 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, receive_signal)
     #signal.signal(signal.SIGUSR2, receive_signal)
 
+    resources()
+    exit
     
     ''' input queue '''
     input = Queue.Queue()
     ''' output queue '''
     output = Queue.Queue()
     
-    ''' initial queue '''
-    nodes = Query('Nodes').ple().execute()
-    for node in nodes :
-        input.put(node)
+    
     
     ''' init Threads '''
     threads = []
     for y in range(10):
-        t = threading.Thread(target=worker, args=(y, input, output))
+        t = threading.Thread(target=agent, args=(y, input, output))
         t.daemon = True
         threads.append(t)
         t.start()

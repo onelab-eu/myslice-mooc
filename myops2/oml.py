@@ -8,7 +8,7 @@ from oml4py import OMLBase
 def availability(resource, status) :
     oml = OMLBase("availability","PLE","PLETestbed","tcp:localhost:3003")
     
-    oml.addmp("", "node:string up:double last_check:string")
+    oml.addmp("sss", "node:string up:double last_check:string")
     oml.start()
     
     oml.inject("", (resource, status, datetime.now().isoformat()  + "+01:00"))
