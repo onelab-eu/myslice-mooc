@@ -4,7 +4,7 @@ import sys, os, signal, time
 import sqlite3
 import Queue
 import threading
-import db
+import db, oml
 
 from planetlab.query import Query
 # from planetlab.test import Service
@@ -22,24 +22,31 @@ def worker(num, input, output):
         resource.hostname = node.hostname
         resource.site_name = node.site
         resource.status = 'up'
+        resource.availability = 1
         
         node = input.get()
 
         if not node.enabled:
             print "!ENABLED %s (%s)" % (resource.hostname, resource.site_name)
             resource.status = 'disabled'
+            resource.availability = 0
         
         elif not node.is_running() :
             print "!RUN %s (%s)" % (resource.hostname, resource.site_name)
             resource.status = 'down'
+            resource.availability = 0
 
         elif not node.is_accessible() :
             print "!ACC %s (%s)" % (resource.hostname, resource.site_name)
             resource.status = 'no access'
+            resource.availability = 0
         
         print "OK %s (%s)" % (resource.hostname, resource.site_name)
         
-        db.update(resource)
+        #db.update(resource)
+        
+        ''' send OML stream '''
+        oml.availability(resource.hostname, resource.availability)
         
         output.put(node)
     #input.task_done()
