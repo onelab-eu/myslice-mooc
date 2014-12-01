@@ -20,13 +20,13 @@ def receive_signal(signum, stack):
 '''
 def resources():
     print "==> Reteiving resources %s" % (datetime.datetime.now())
-    db = db()
+    d = db()
     ''' PLE nodes '''
     nodes = Query('Nodes').ple().execute()
     for node in nodes :
-        db.update_resource(node)
-    db.commit()
-    db.close()
+        d.update_resource(node)
+    d.commit()
+    d.close()
 
 ''' A thread that that will wekup with a timer and return the resources 
     that need to be monitored
