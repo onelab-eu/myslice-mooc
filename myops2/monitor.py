@@ -19,12 +19,13 @@ def worker(num, input, output):
     print 'Worker: %s' % num
     resource = {}
     while True :
+        
+        node = input.get()
+        
         resource.hostname = node.hostname
         resource.site_name = node.site
         resource.status = 'up'
         resource.availability = 1
-        
-        node = input.get()
 
         if not node.enabled:
             print "!ENABLED %s (%s)" % (resource.hostname, resource.site_name)
