@@ -32,7 +32,7 @@ def resources():
 
 ''' A thread that will check resource availability and information
 '''
-def agent(num, input, output):
+def agent(num, input):
     
     d = db()
     
