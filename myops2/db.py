@@ -27,7 +27,7 @@ class db(object) :
             if not self.cursor.fetchone() :
                 print "+=> Inserting %s" % (resource.hostname)
                 self.cursor.execute("INSERT INTO resources (hostname,site) VALUES ('%s','%s')" % (resource.hostname,resource.site_name)) 
-        except Esception as e:
+        except Exception as e:
             raise Exception("Unable to update database: %s" % e)
 
     ''' retrieve the resources to monitor '''
