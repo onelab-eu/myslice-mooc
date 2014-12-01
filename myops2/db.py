@@ -1,33 +1,44 @@
 import sys, os, signal, time
 import psycopg2
 
-def connect():
-    try:
-        conn = psycopg2.connect("dbname='myops2' user='myops2' host='localhost' password='IChVVyCbxrhA'")
-    except:
-        print "Unable to connect to the database"
-        return False
-    return conn
-        
-def update(resource):
-    
-    if not resource.hostname :
-        print "Resource name must be specified"
-        return False
-    
-    conn = connect()
-    if conn :
-        cursor = conn.cursor()
+class db(object) :
+
+    def __init__(self):
         try:
-            cursor.execute("SELECT hostname FROM resources WHERE hostname='%s'" % (resource.hostname))
-            if not cursor.fetchone() :
-                cursor.execute("INSERT INTO resources (hostname,site) VALUES ('%s','%s')" % (resource.hostname,resource.site_name))
-            
-            cursor.execute("INSERT INTO monitor (hostname,status,timestamp) VALUES ('%s','%s',current_timestamp)" % (resource.hostname,resource.status))
-            
-            conn.commit()
-            conn.close()
+            self.conn = psycopg2.connect("dbname='myops2' user='myops2' host='localhost' password='IChVVyCbxrhA'")
+            self.cursor = self.conn.cursor()
         except:
-            print "Unable to update database"
+            raise Exception("Unable to connect to the database")
+
+    def commit(self):
+        self.conn.commit()
+    
+    def close(self):
+        self.conn.close()
+        
+    ''' update info for the resource '''
+    def update_resource(self, resource):
+
+        if not resource.hostname :
+            raise Exception("Resource name must be specified")
             return False
-    return True
+    
+        try:
+            self.cursor.execute("SELECT hostname FROM resources WHERE hostname='%s'" % (resource.hostname))
+            if not cursor.fetchone() :
+                self.cursor.execute("INSERT INTO resources (hostname,site) VALUES ('%s','%s')" % (resource.hostname,resource.site_name)) 
+            
+        except:
+            raise Exception("Unable to update database")
+
+    ''' retrieve the resources to monitor '''
+    def monitor_resources(self):
+        try:
+            cursor.execute("SELECT hostname FROM resources WHERE timestamp > current_timestamp - interval '15 minutes'")
+            rows = cursor.fetchall()
+            return rows
+        except:
+            raise Exception("Unable to retrieve data from database")
+    
+    def status_resource(self, resource):
+        cursor.execute("INSERT INTO monitor (hostname,status,timestamp) VALUES ('%s','%s',current_timestamp)" % (resource.hostname,resource.status))

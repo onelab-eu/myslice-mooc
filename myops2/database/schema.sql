@@ -17,7 +17,7 @@ CREATE TABLE monitor (
 		id serial,
 		hostname text,
 		status text, -- up, down, no access, disabled, maintenance
-		timestamp timestamp
+		timestamp timestamp,
 	PRIMARY KEY (id),
 	FOREIGN KEY (hostname)
 		REFERENCES resources (hostname)
