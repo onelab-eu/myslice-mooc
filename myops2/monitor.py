@@ -58,7 +58,7 @@ def agent(num, input):
             status = "up"
         
         ''' send OML stream '''
-        oml.availability(resource.hostname, availability)
+        #oml.availability(resource.hostname, availability)
         
         d.status_resource(resource.hostname, status)
         d.commit()
@@ -93,33 +93,5 @@ if __name__ == '__main__':
             for resource in resources :
                 node = Query('Nodes').hostname(resource['hostname']).execute().first()
                 input.put(node)
-        #print 'checked: %s' % (ret)
-        #input.put(ret)
-        time.sleep(900)
-
-    
-#     queue = Queue.Queue()
-#     
-#     ''' start threads '''
-#     for i in range(10):
-#         t = CheckNodes(queue)
-#         t.setDaemon(True)
-#         t.start()
-    
-    
-#     nodes = Query('Nodes').ple().execute()
-#     print nodes.count()
-#     for node in nodes :
-#         print node.hostname
-    
-        #if node.enabled:
-            #pass
-            #queue.put(site.nodes)
-
-    #queue.join()
-    
-    #Node.results()
-    #Service.results()
-    #Packages.results()
-    
+        time.sleep(60)
         

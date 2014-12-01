@@ -11,6 +11,6 @@ def availability(resource, status) :
     oml.addmp("sss", "node:string up:double last_check:string")
     oml.start()
     
-    oml.inject("", (resource, status, datetime.now().isoformat()  + "+01:00"))
+    oml.inject("sss", (resource, status, datetime.now().isoformat()  + "+01:00"))
     
     oml.close()
