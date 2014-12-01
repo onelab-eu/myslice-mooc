@@ -19,88 +19,82 @@ def receive_signal(signum, stack):
 ''' A thread that will check if new resources have been added
 '''
 def resources():
-    print "==> Reteiving resources %s" % (datetime.datetime.now())
-    d = db()
-    ''' PLE nodes '''
-    nodes = Query('Nodes').ple().execute()
-    for node in nodes :
-        d.update_resource(node)
-    d.commit()
-    d.close()
-
-''' A thread that that will wekup with a timer and return the resources 
-    that need to be monitored
-'''
-def monitor():
-    pass
+    while True :
+        print "==> Reteiving resources %s" % (datetime.datetime.now())
+        d = db()
+        ''' PLE nodes '''
+        nodes = Query('Nodes').ple().execute()
+        for node in nodes :
+            d.update_resource(node)
+        d.commit()
+        d.close()
+        time.sleep(86400)
 
 ''' A thread that will check resource availability and information
 '''
 def agent(num, input, output):
-    print 'Worker: %s' % num
+    
+    d = db()
+    
     while True :
+        resource = input.get()
+        availability = 1
+        status = "up"
         
-        node = input.get()
-        
-        resource = { 
-            'hostname': node.hostname,
-            'site_name': node.site,
-            'status': 'up',
-            'availability': 1
-        }
-
         if not node.enabled:
-            print "!ENABLED %s (%s)" % (resource['hostname'], resource['site_name'])
-            resource['status'] = 'disabled'
-            resource['availability'] = 0
+            print "+=> %s is not enabled" % (resource.hostname)
+            availability = 0
+            status = "disabled"
         
         elif not node.is_running() :
-            print "!RUN %s (%s)" % (resource['hostname'], resource['site_name'])
-            resource['status'] = 'down'
-            resource['availability'] = 0
+            print "+=> %s is not running" % (resource.hostname)
+            availability = 0
+            status = "down"
 
         elif not node.is_accessible() :
-            print "!ACC %s (%s)" % (resource['hostname'], resource['site_name'])
-            resource['status'] = 'no access'
-            resource['availability'] = 0
-        
-        #print "OK %s (%s)" % (resource['hostname'], resource['site_name'])
-        
-        #db.update(resource)
+            print "+=> %s is not accessible" % (resource.hostname)
+            availability = 0
+            status = "no access"
         
         ''' send OML stream '''
-        oml.availability(resource['hostname'], resource['availability'])
+        oml.availability(resource.hostname, availability)
         
-        output.put(node)
-    #input.task_done()
+        d.status_resource(resource.hostname, status)
+        d.commit()
             
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, receive_signal)
     #signal.signal(signal.SIGUSR2, receive_signal)
-
-    resources()
-    exit
     
     ''' input queue '''
     input = Queue.Queue()
-    ''' output queue '''
-    output = Queue.Queue()
     
-    
-    
-    ''' init Threads '''
+    ''' resources thread '''
+    t = threading.Thread(target=resources)
+    t.daemon = True
+    threads.append(t)
+    t.start()
+        
+    ''' agent threads '''
     threads = []
     for y in range(10):
-        t = threading.Thread(target=agent, args=(y, input, output))
+        t = threading.Thread(target=agent, args=(y, input))
         t.daemon = True
         threads.append(t)
         t.start()
             
-    ''' main Thread '''
+    ''' The main thread will return the resources 
+        that need to be monitored
+    '''
     while True:
-        ret = output.get()
+        d = db()
+        resources = d.select_resources()
+        if resources :
+            for resource in resources :
+                input.put(resource)
         #print 'checked: %s' % (ret)
-        input.put(ret)
+        #input.put(ret)
+        time.sleep(900)
 
     
 #     queue = Queue.Queue()

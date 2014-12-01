@@ -31,13 +31,16 @@ class db(object) :
             raise Exception("Unable to update database: %s" % e)
 
     ''' retrieve the resources to monitor '''
-    def monitor_resources(self):
+    def select_resources(self):
         try:
-            cursor.execute("SELECT hostname FROM resources WHERE timestamp > current_timestamp - interval '15 minutes'")
-            rows = cursor.fetchall()
+            self.cursor.execute("select r.hostname from resources r left join monitor m on (m.hostname = r.hostname) WHERE m.timestamp > current_timestamp - interval '15 minutes' or m.timestamp is null")
+            rows = self.cursor.fetchall()
             return rows
-        except:
-            raise Exception("Unable to retrieve data from database")
+        except Exception as e:
+            raise Exception("Unable to retrieve data from database: %s" % e)
     
-    def status_resource(self, resource):
-        cursor.execute("INSERT INTO monitor (hostname,status,timestamp) VALUES ('%s','%s',current_timestamp)" % (resource.hostname,resource.status))
+    def status_resource(self, hostname, status):
+        try :
+            self.cursor.execute("INSERT INTO monitor (hostname,status,timestamp) VALUES ('%s','%s',current_timestamp)" % (hostname,status))
+        except Exception as e:
+            raise Exception("Unable to insert data into database: %s" % e)
