@@ -18,7 +18,7 @@ def receive_signal(signum, stack):
 ''' A thread that will check if new resources have been added
 '''
 def resources():
-    print "Reteiving resources " + datetime.datetime.now()
+    print "==> Reteiving resources %s" % (datetime.datetime.now())
     db = db()
     ''' PLE nodes '''
     nodes = Query('Nodes').ple().execute()
