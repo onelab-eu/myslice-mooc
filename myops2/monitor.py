@@ -41,29 +41,31 @@ def agent(num, input):
     while True :
         resource = input.get()
         
-        if not resource.enabled:
-            print "+=> %s is not enabled" % (resource.hostname)
+        node = Query('Nodes').hostname(resource['hostname']).execute().first()
+        
+        if not node.enabled:
+            print "+=> %s is not enabled" % (node.hostname)
             availability = 0
             status = "disabled"
         
-        elif not resource.is_running() :
-            print "+=> %s is not running" % (resource.hostname)
+        elif not node.is_running() :
+            print "+=> %s is not running" % (node.hostname)
             availability = 0
             status = "down"
 
-        elif not resource.is_accessible() :
-            print "+=> %s is not accessible" % (resource.hostname)
+        elif not node.is_accessible() :
+            print "+=> %s is not accessible" % (node.hostname)
             availability = 0
             status = "no access"
         else :
-            print "+=> %s is ok" % (resource.hostname)
+            print "+=> %s is ok" % (node.hostname)
             availability = 1
             status = "up"
         
         ''' send OML stream '''
         #oml.availability(resource.hostname, availability)
         
-        d.status_resource(resource.hostname, status)
+        d.status_resource(node.hostname, status)
         d.commit()
             
 if __name__ == '__main__':
@@ -96,7 +98,6 @@ if __name__ == '__main__':
         resources = d.select_resources()
         if resources :
             for resource in resources :
-                node = Query('Nodes').hostname(resource['hostname']).execute().first()
-                input.put(node)
+                input.put(resource)
         time.sleep(60)
         
