@@ -25,7 +25,7 @@ class db(object) :
         try:
             self.cursor.execute("SELECT hostname FROM resources WHERE hostname='%s'" % (resource.hostname))
             if not self.cursor.fetchone() :
-                print "+=> Inserting %s" % (resource.hostname)
+                logging.info("+=> Inserting %s" % (resource.hostname))
                 self.cursor.execute("INSERT INTO resources (hostname,site) VALUES ('%s','%s')" % (resource.hostname,resource.site)) 
         except Exception as e:
             raise Exception("Unable to update database: %s" % e)
@@ -33,7 +33,7 @@ class db(object) :
     ''' retrieve the resources to monitor '''
     def select_resources(self):
         try:
-            self.cursor.execute("select r.hostname from resources r left join monitor m on (m.hostname = r.hostname) WHERE m.timestamp > current_timestamp - interval '15 minutes' or m.timestamp is null")
+            self.cursor.execute("select * from status where last_checked < current_timestamp - interval '15 minutes' or last_checked is null;")
             rows = self.cursor.fetchall()
             return rows
         except Exception as e:

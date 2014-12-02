@@ -19,11 +19,11 @@ def receive_signal(signum, stack):
 '''
 def resources():
     while True :
-        print "==> Reteiving resources %s" % (datetime.datetime.now())
+        logging.info("==> Reteiving resources %s" % (datetime.datetime.now()))
+        
         d = db()
         ''' PLE nodes '''
         nodes = Query('Nodes').ple().execute()
-        print nodes
         for node in nodes :
             d.update_resource(node)
         d.commit()
