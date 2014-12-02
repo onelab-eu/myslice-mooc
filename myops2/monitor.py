@@ -43,7 +43,7 @@ def agent(num, input):
     while True :
         resource = input.get()
         
-        node = Query('Nodes').hostname(resource['hostname']).execute().first()
+        node = Query('Nodes').hostname(resource).execute().first()
         
         if not node.enabled:
             print "+=> %s is not enabled" % (node.hostname)
@@ -100,6 +100,6 @@ if __name__ == '__main__':
         resources = d.select_resources()
         if resources :
             for resource in resources :
-                input.put(resource)
+                input.put(resource['hostname'])
         time.sleep(60)
         
