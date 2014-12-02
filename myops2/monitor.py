@@ -1,5 +1,11 @@
 #!/usr/bin/env python 
 
+'''
+    MyOps2 - a new monitoring system for PlanetLab
+    
+    (c) 2014 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
+'''
+
 import sys, os, signal, time, datetime
 import logging
 import threading
@@ -65,7 +71,7 @@ def agent(num, input):
             status = "up"
         
         ''' send OML stream '''
-        #oml.availability(node.hostname, availability)
+        oml.availability(node.hostname, availability)
         
         d.status_resource(node.hostname, status)
         d.commit()

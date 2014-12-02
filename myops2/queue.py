@@ -2,7 +2,11 @@
     A Thread safe Queue that uses internally an OrderedSet. This queue will avoid having in the queue 
     objects that were previously inserted.
     
-    (c) 2014 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
+    Sources:
+        http://stackoverflow.com/questions/16506429/check-if-element-is-already-in-a-queue
+        http://code.activestate.com/recipes/576694/
+    
+    Licensed under the MIT License
 '''
 
 import collections, Queue

@@ -25,6 +25,8 @@ CREATE TABLE monitor (
 );
 
 CREATE VIEW status AS
-select r.hostname,m.status,max(m.timestamp) as last_checked from resources r
+select r.hostname,max(m.timestamp) as last_checked from resources r
 left join monitor m on (r.hostname = m.hostname)
-group by r.hostname, m.status;
+group by r.hostname;
+
+
