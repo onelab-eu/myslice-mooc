@@ -23,3 +23,8 @@ CREATE TABLE monitor (
 		REFERENCES resources (hostname)
 		ON UPDATE NO ACTION ON DELETE NO ACTION
 );
+
+CREATE VIEW status AS
+select r.hostname,m.status,max(m.timestamp) as last_checked from resources r
+left join monitor m on (r.hostname = m.hostname)
+group by r.hostname, m.status;
