@@ -1,8 +1,8 @@
 #!/usr/bin/env python 
 
 import sys, os, signal, time, datetime
-import Queue
-import threading
+import logging
+import Queue, threading
 from db import db
 import oml
 
@@ -32,6 +32,8 @@ def resources():
 ''' A thread that will check resource availability and information
 '''
 def agent(num, input):
+    
+    logging.info("Agent %s starting" % (num))
     
     d = db()
     
@@ -71,6 +73,7 @@ if __name__ == '__main__':
     input = Queue.Queue()
     
     ''' resources thread '''
+    logging.info("Starting resources thread")
     t = threading.Thread(target=resources)
     t.daemon = True
     t.start()
@@ -86,6 +89,7 @@ if __name__ == '__main__':
     ''' The main thread will return the resources 
         that need to be monitored
     '''
+    logging.info("Main Thread")
     while True:
         d = db()
         resources = d.select_resources()
