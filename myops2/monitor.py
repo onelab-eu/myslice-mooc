@@ -2,7 +2,8 @@
 
 import sys, os, signal, time, datetime
 import logging
-import Queue, threading
+import threading
+from queue import OrderedSetQueue
 from db import db
 import oml
 
@@ -10,6 +11,7 @@ from planetlab.query import Query
 # from planetlab.test import Service
 # from planetlab.test import Packages
 # from planetlab.test import Node
+
 
 def receive_signal(signum, stack):
     print 'Received:', signum
@@ -63,7 +65,7 @@ def agent(num, input):
             status = "up"
         
         ''' send OML stream '''
-        #oml.availability(resource.hostname, availability)
+        #oml.availability(node.hostname, availability)
         
         d.status_resource(node.hostname, status)
         d.commit()
@@ -73,7 +75,7 @@ if __name__ == '__main__':
     #signal.signal(signal.SIGUSR2, receive_signal)
     
     ''' input queue '''
-    input = Queue.Queue()
+    input = OrderedSetQueue()
     
     ''' resources thread '''
     logging.info("Starting resources thread")
