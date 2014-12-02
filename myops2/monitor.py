@@ -23,6 +23,7 @@ def resources():
         d = db()
         ''' PLE nodes '''
         nodes = Query('Nodes').ple().execute()
+        print nodes
         for node in nodes :
             d.update_resource(node)
         d.commit()
