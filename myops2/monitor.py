@@ -27,7 +27,7 @@ def receive_signal(signum, stack):
 '''
 def resources():
     while True :
-        logging.info("==> Reteiving resources %s" % (datetime.datetime.now()))
+        logging.info("==> Retreiving resources %s" % (datetime.datetime.now()))
         
         d = db()
         ''' PLE nodes '''
