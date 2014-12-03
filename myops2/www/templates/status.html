@@ -1,8 +1,11 @@
 {% extends "layout.html" %}
 {% block body %}
-  <ul class="status">
+  <table class="table table-striped">
+  <tr>
   {% for r in resources %}
-    <li><h2>{{ r.hostname }}</h2> {{ r.last_checked }}
+    <td>{{ r.hostname }}</td>
+    <td>{{ r.last_checked }}</td>
   {% endfor %}
-  </ul>
+  </tr>
+  </table>
 {% endblock %}
