@@ -8,7 +8,7 @@ from oml4py import OMLBase
 def availability(resource, status) :
     oml = OMLBase("myops2","PLE","PLETestbed","tcp:localhost:3003")
     
-    self.mpprefix = False
+    oml.mpprefix = False
     
     oml.addmp("availability", "node:string up:double last_check:string")
     oml.start()
