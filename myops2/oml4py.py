@@ -15,6 +15,10 @@
 #
 # Date: 08/06/2012
 #
+# Modified: 03/12/2014
+# Author: Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
+# - added self.mpprefix option to add the appname as a prefix to the mpname, defaults to True.
+# - moved all stdout calls to the logger module
 
 import argparse
 import random
@@ -22,10 +26,11 @@ import re
 import sys
 import os
 import socket
+import logging
 from time import time
 from time import sleep
 
-__version__ = "2.10.4"
+__version__ = "2.10.5"
 
 # Compatibility with Python 2 and 3's string type
 if float(sys.version[:3])<3:
@@ -52,7 +57,7 @@ class OMLBase:
     args = None
 
     def _banner(self):
-        sys.stderr.write("INFO\t%s [Protocol V%d] %s\n" % (self.VERSION_STRING, self.PROTOCOL, self.COPYRIGHT))
+        logging.info("INFO\t%s [Protocol V%d] %s\n" % (self.VERSION_STRING, self.PROTOCOL, self.COPYRIGHT))
 
 
     def __init__(self,appname,domain=None,sender=None,uri=None,expid=None):
@@ -72,11 +77,11 @@ class OMLBase:
         # Set all the instance variables
         self.appname = appname
         if self.appname[:1].isdigit() or '-' in self.appname or '.' in self.appname:
-            sys.stderr.write("ERROR\tInvalid app name: %s\n" %  self.appname)
+            logging.error("ERROR\tInvalid app name: %s\n" %  self.appname)
             self._disable_oml()
 
         if expid is not None:
-            sys.stderr.write("WARN\t%s parameter 'expid' is deprecated; please use 'domain' instead\n" % self.__class__.__name__)
+            logging.warning("WARN\t%s parameter 'expid' is deprecated; please use 'domain' instead\n" % self.__class__.__name__)
 
         if domain is None:
             domain = expid
@@ -89,9 +94,9 @@ class OMLBase:
             self.domain = os.environ['OML_DOMAIN']
         elif 'OML_EXP_ID' in os.environ.keys():
             self.domain = os.environ['OML_EXP_ID']
-            sys.stderr.write("WARN\tOML_EXP_ID is deprecated; please use OML_DOMAIN instead\n")
+            logging.warning("WARN\tOML_EXP_ID is deprecated; please use OML_DOMAIN instead\n")
         else:
-            sys.stderr.write("ERROR\tNo experimental domain specified\n")
+            logging.error("ERROR\tNo experimental domain specified\n")
             self._disable_oml()
 
         if uri is None:
@@ -101,7 +106,7 @@ class OMLBase:
                 uri = os.environ['OML_COLLECT']
             elif 'OML_SERVER' in os.environ.keys():
                 uri = os.environ['OML_SERVER']
-                sys.stderr.write("WARN\tOML_SERVER is deprecated; please use OML_COLLECT instead\n")
+                logging.warning("WARN\tOML_SERVER is deprecated; please use OML_COLLECT instead\n")
             else:
                 uri = "tcp:%s:%s" %(self.DEFAULT_HOST, self.DEFAULT_PORT)
         uri_l = uri.split(":")
@@ -122,7 +127,7 @@ class OMLBase:
             try:
                 self.omlport = int(self.omlport)
             except ValueError:
-                sys.stderr.write("ERROR\tCannot use '%s' as a port number\n" % self.omlport)
+                logging.error("ERROR\tCannot use '%s' as a port number\n" % self.omlport)
                 self._disable_oml()
 
         if sender is not None:
@@ -133,7 +138,7 @@ class OMLBase:
             try:
                 self.sender =  os.environ['OML_NAME']
             except KeyError:
-                sys.stderr.write("ERROR\tNo sender ID specified (OML_NAME)\n")
+                logging.error("ERROR\tNo sender ID specified (OML_NAME)\n")
                 self._disable_oml()
 
         self.starttime = 0
@@ -144,16 +149,18 @@ class OMLBase:
         self.fields = {}
         self.metaseq = {}
         self.sock = None
+        # set to False to disable adding the appname as prefix to the mpname
+        self.mpprefix = True
         self.addmp(None, "subject:string key:string value:string")
 
 
     def addmp(self,mpname,schema):
         if mpname and self._is_valid_name(mpname):
-            sys.stderr.write("ERROR\tInvalid measurement point name: %s\n" %  mpname)
+            logging.error("ERROR\tInvalid measurement point name: %s\n" %  mpname)
             self._disable_oml()
             return
         elif mpname in self.fields:
-            sys.stderr.write("ERROR\tAttempted to add an existing MP '%s'\n" %  mpname)
+            logging.info("ERROR\tAttempted to add an existing MP '%s'\n" %  mpname)
             return
         # remember field names
         fs = set()
@@ -166,10 +173,11 @@ class OMLBase:
             self.schema += '\n'
         if mpname is None:
             target = "_experiment_metadata"
-        else:
-            ##### CHANGED for F4F
-            #target = self.appname + "_" + mpname
+        elif self.mpprefix == False :
             target = mpname
+        else:
+            target = self.appname + "_" + mpname            
+            
         str_schema = str(self.streams) + " " + target + " " + schema
         self.schema += "schema: " + str_schema
         self.nextseq[mpname] = 0
@@ -191,7 +199,7 @@ class OMLBase:
                     "app-name: " + str(self.appname) + "\n" + \
                     str(self.schema) + '\n' + "content: text" + '\n' + '\n'    
                 # connect to OML server
-                sys.stderr.write("INFO\tCollection URI is tcp:%s:%d\n" % (self.omlserver, self.omlport))
+                logging.info("INFO\tCollection URI is tcp:%s:%d\n" % (self.omlserver, self.omlport))
                 try:
                     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self.sock.settimeout(5) 
@@ -199,13 +207,13 @@ class OMLBase:
                     self.sock.settimeout(None)
                     self.sock.send(to_bytes(header))
                 except socket.error as e:
-                    sys.stderr.write("ERROR\tCould not connect to OML server: %s\n" %  e)
+                    logging.error("ERROR\tCould not connect to OML server: %s\n" %  e)
                     self._disable_oml()
-                    sys.stdout.write(header)
+                    logging.info(header)
             else:
-                sys.stderr.write("ERROR\tstart() called unexpectedly\n")
+                logging.error("ERROR\tstart() called unexpectedly\n")
         else:
-            sys.stderr.write("WARN\tOML disabled\n")
+            logging.warning("WARN\tOML disabled\n")
 
 
     def close(self):
@@ -225,7 +233,7 @@ class OMLBase:
 
     def inject(self,mpname,values):
         if self.oml and self.starttime == 0:
-            sys.stderr.write("ERROR\tDid not call start()\n")
+            logging.error("ERROR\tDid not call start()\n")
             self._disable_oml()
         # prepare the measurement info
         str_inject = ""
@@ -236,7 +244,7 @@ class OMLBase:
             str_inject = str(timestamp) + '\t' + str(streamid) + '\t' + str(seqno)
             self.nextseq[mpname] += 1
         except KeyError:
-            sys.stderr.write("ERROR\tTried to inject into unknown MP '%s'\n" % mpname)
+            logging.error("ERROR\tTried to inject into unknown MP '%s'\n" % mpname)
             return
         # prepare the measurement tuple
         try:
@@ -245,33 +253,33 @@ class OMLBase:
                 str_inject += self._escape(str(item))
             str_inject += '\n'
         except TypeError:
-            sys.stderr.write("ERROR\tInvalid measurement list\n")
+            logging.error("ERROR\tInvalid measurement list\n")
             return
         # either inject it or display it
         if self.oml and self.sock:
             try:
                 self.sock.send(to_bytes(str_inject))
-                sys.stderr.write("INFO\tInjected: %s\n" % str_inject)
+                logging.info("INFO\tInjected: %s\n" % str_inject)
             except:
-                sys.stderr.write("ERROR\tCould not send injected sample\n")
-                sys.stdout.write(str_inject)
+                logging.error("ERROR\tCould not send injected sample\n")
+                logging.info(str_inject)
         else:
-            sys.stdout.write(str_inject)
+            logging.info(str_inject)
 
 
     def inject_metadata(self,mpname,key,value,fname=None):
         # check parameters
         if self.oml and self.starttime == 0:
-            sys.stderr.write("ERROR\tDid not call start()\n")
+            logging.error("ERROR\tDid not call start()\n")
             return
         elif key is None or value is None:
-            sys.stderr.write("ERROR\tMissing key or value\n")
+            logging.error("ERROR\tMissing key or value\n")
             return
         elif self._is_valid_name(key):
-            sys.stderr.write("ERROR\t'%s' is not a valid metadata key name\n" % key)
+            logging.error("ERROR\t'%s' is not a valid metadata key name\n" % key)
             return
         elif mpname and self._is_valid_name(mpname):
-            sys.stderr.write("ERROR\t'%s' is not a valid MP name\n" % mpname)
+            logging.error("ERROR\t'%s' is not a valid MP name\n" % mpname)
             return
         # prepare the measurement info
         str_inject = ""
@@ -282,7 +290,7 @@ class OMLBase:
             str_inject = str(timestamp) + '\t' + str(streamid) + '\t' + str(seqno)
             self.metaseq[mpname] += 1
         except KeyError:
-            sys.stderr.write("ERROR\tTried to inject metadata into unknown MP '%s'\n" % mpname)
+            logging.error("ERROR\tTried to inject metadata into unknown MP '%s'\n" % mpname)
             return
         # prepare the metadata
         subject = "."
@@ -293,7 +301,7 @@ class OMLBase:
                 if fname in self.fields[mpname]:
                     subject += "." + fname
                 else:
-                    sys.stderr.write("WARN\tField '%s' not found in MP '%s', not reporting\n" % (fname, mpname))
+                    logging.info("WARN\tField '%s' not found in MP '%s', not reporting\n" % (fname, mpname))
                     return
         str_inject += '\t' + subject + '\t' + str(key) + '\t' + self._escape(str(value)) + '\n'
         # either inject it or display it
@@ -301,16 +309,16 @@ class OMLBase:
             try:
                 self.sock.send(to_bytes(str_inject))
             except:
-                sys.stderr.write("ERROR\tCould not send injected metadata\n")
-                sys.stdout.write(str_inject)
+                logging.info("ERROR\tCould not send injected metadata\n")
+                logging.info(str_inject)
         else:
-            sys.stdout.write(str_inject)
+            logging.info(str_inject)
 
 
     def _disable_oml(self):
         if not self.oml:
             return
-        sys.stderr.write("WARN\tDisabling OML output\n")
+        logging.info("WARN\tDisabling OML output\n")
         self.oml = False
 
 
