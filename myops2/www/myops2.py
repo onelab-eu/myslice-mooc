@@ -13,7 +13,7 @@ def status():
         conn = psycopg2.connect("dbname='myops2' user='myops2' host='localhost' password='IChVVyCbxrhA'")
         cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     except:
-            raise Exception("Unable to connect to the database")
+        raise Exception("Unable to connect to the database")
     
     try:
         cursor.execute("select * from status;")
