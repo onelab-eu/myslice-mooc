@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block body %}
+  <ul class="status">
+  {% for r in resources %}
+    <li><h2>{{ r.hostname }}</h2> {{ r.last_checked }}
+  {% endfor %}
+  </ul>
+{% endblock %}
