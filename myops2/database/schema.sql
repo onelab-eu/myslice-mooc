@@ -30,3 +30,5 @@ left join monitor m on (r.hostname = m.hostname)
 group by r.hostname;
 
 
+select distinct on (m.hostname) m.hostname,m.timestamp as last_checked,m.status from resources r
+order by m.hostname, m.timestamp desc;

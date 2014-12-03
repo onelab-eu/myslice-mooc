@@ -24,7 +24,7 @@ def status():
         raise Exception("Unable to connect to the database")
     
     try:
-        cursor.execute("select * from status;")
+        cursor.execute("select distinct on (m.hostname) m.hostname,m.timestamp as last_checked,m.status from monitor m order by m.hostname, m.timestamp desc;")
         resources = cursor.fetchall()
     except Exception as e:
         raise Exception("Unable to retrieve data from database: %s" % e)
