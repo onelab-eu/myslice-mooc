@@ -1,4 +1,4 @@
-import sys, os, signal, time
+import sys, os, signal, time, logging
 import psycopg2, psycopg2.extras
 
 class db(object) :
