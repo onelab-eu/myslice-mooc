@@ -6,7 +6,8 @@ from oml4py import OMLBase
     status is 1 or 0 (up or down)
 '''
 def availability(resource, status) :
-    oml = OMLBase("myops2","PLE","PLETestbed","tcp:localhost:3003")
+    # TUB server
+    oml = OMLBase("myops2","PLE","PLETestbed","tcp:193.175.132.241:3003")
     
     oml.mpprefix = False
     
