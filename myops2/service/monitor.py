@@ -56,16 +56,17 @@ def agent(num, input):
         elif not node.is_running() :
             print "+=> (%s) %s is not running" % (node.boot, node.hostname)
             availability = 0
-            status = "down"
-
-        elif not ssh.execute(node.hostname) :
-            print "+=> (%s) %s is not accessible" % (node.boot, node.hostname)
-            availability = 0
-            status = "no access"
+            status = "down"            
         else :
-            print "+=> (%s) %s is ok" % (node.boot, node.hostname)
-            availability = 1
-            status = "up"
+            r, o = ssh.execute(node.hostname)
+            if not r :
+                print "+=> (%s) %s is not accessible" % (node.boot, node.hostname)
+                availability = 0
+                status = "no access"
+            else :
+                print "+=> (%s) %s is ok" % (node.boot, node.hostname)
+                availability = 1
+                status = "up"
         
         ''' send OML stream '''
         oml.availability(node.hostname, availability)
