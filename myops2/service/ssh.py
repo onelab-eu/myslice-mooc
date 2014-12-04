@@ -73,6 +73,12 @@ def execute(hostname, command=None):
         channel.exec_command(command)
         
         out = ""
+        
+        data = channel.recv(1024)
+        while data:
+          out += data
+          data = channel.recv(1024)
+        
         ret = channel.recv_exit_status()
         
         if ret == 0 :
@@ -80,15 +86,10 @@ def execute(hostname, command=None):
         else :
             r = False
         
-        data = channel.recv(1024)
-        while data:
-          out += data
-          data = channel.recv(1024)
-        
         channel.close()
         transport.close()
         
-        return (ret, out.strip())
+        return (r, out.strip())
     
     except Exception as e:
         try:
