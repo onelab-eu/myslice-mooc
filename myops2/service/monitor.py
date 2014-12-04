@@ -88,7 +88,7 @@ if __name__ == '__main__':
         
     ''' agent threads '''
     threads = []
-    for y in range(1):
+    for y in range(20):
         t = threading.Thread(target=agent, args=(y, input))
         t.daemon = True
         threads.append(t)
