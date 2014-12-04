@@ -55,14 +55,20 @@ def execute(hostname, command=None):
 #         else:
 #             print('*** Host key OK.')
     
-        path = os.path.join(os.environ['HOME'], '.ssh', 'id_rsa')
-
-        try:
-            key = paramiko.RSAKey.from_private_key_file(path)
-        except paramiko.PasswordRequiredException:
-            password = getpass.getpass('RSA key password: ')
-            key = paramiko.RSAKey.from_private_key_file(path, password)
-        transport.auth_publickey(username, key)
+#         path = os.path.join(os.environ['HOME'], '.ssh', 'id_rsa')
+# 
+#         try:
+#             key = paramiko.RSAKey.from_private_key_file(path)
+#         except paramiko.PasswordRequiredException:
+#             password = getpass.getpass('RSA key password: ')
+#             key = paramiko.RSAKey.from_private_key_file(path, password)
+#         transport.auth_publickey(username, key)
+        
+        rootkey = paramiko.RSAKey.from_private_key_file(os.path.join('etc','planetlab','planetlab_root_ssh_key.rsa'))
+        transport.auth_publickey(username, rootkey)
+        
+        debugkey = paramiko.RSAKey.from_private_key_file(os.path.join('etc','planetlab','planetlab_debug_ssh_key.rsa'))
+        transport.auth_publickey(username, debugkey)
         
         if not transport.is_authenticated():
             transport.close()
