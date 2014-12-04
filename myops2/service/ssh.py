@@ -71,6 +71,11 @@ def execute(hostname, command=None):
         channel = transport.open_session()
         
         channel.exec_command(command)
+        ret = channel.recv_exit_status()
+        if ret == 0 :
+            r = True
+        else :
+            r = False
         
         out = ""
         
@@ -79,12 +84,6 @@ def execute(hostname, command=None):
           out += data
           data = channel.recv(1024)
         
-        ret = channel.recv_exit_status()
-        
-        if ret == 0 :
-            r = True
-        else :
-            r = False
         
         channel.close()
         transport.close()
