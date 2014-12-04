@@ -11,13 +11,10 @@ import logging
 import threading
 from queue import OrderedSetQueue
 from db import db
+import ssh
 import oml
 
 from planetlab.query import Query
-# from planetlab.test import Service
-# from planetlab.test import Packages
-# from planetlab.test import Node
-
 
 def receive_signal(signum, stack):
     print 'Received:', signum
@@ -52,21 +49,21 @@ def agent(num, input):
         node = Query('Nodes').hostname(resource).execute().first()
         
         if not node.enabled:
-            print "+=> %s is not enabled" % (node.hostname)
+            print "+=> (%s) %s is not enabled" % (node.boot, node.hostname)
             availability = 0
             status = "disabled"
         
         elif not node.is_running() :
-            print "+=> %s is not running" % (node.hostname)
+            print "+=> (%s) %s is not running" % (node.boot, node.hostname)
             availability = 0
             status = "down"
 
-        elif not node.is_accessible() :
-            print "+=> %s is not accessible" % (node.hostname)
+        elif not ssh.execute(node.hostname) :
+            print "+=> (%s) %s is not accessible" % (node.boot, node.hostname)
             availability = 0
             status = "no access"
         else :
-            print "+=> %s is ok" % (node.hostname)
+            print "+=> (%s) %s is ok" % (node.boot, node.hostname)
             availability = 1
             status = "up"
         
@@ -91,7 +88,7 @@ if __name__ == '__main__':
         
     ''' agent threads '''
     threads = []
-    for y in range(10):
+    for y in range(1):
         t = threading.Thread(target=agent, args=(y, input))
         t.daemon = True
         threads.append(t)
@@ -107,5 +104,5 @@ if __name__ == '__main__':
         if resources :
             for resource in resources :
                 input.put(resource['hostname'])
-        time.sleep(60)
+        time.sleep(600)
         
