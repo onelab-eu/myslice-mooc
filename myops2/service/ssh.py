@@ -68,6 +68,7 @@ def execute(hostname, command=None):
         try :
             transport.auth_publickey(username, rootkey)
         except paramiko.AuthenticationException:
+            print "trying debug"
             debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
             try :
                 transport.auth_publickey(username, debugkey)
