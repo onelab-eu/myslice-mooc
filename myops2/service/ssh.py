@@ -64,15 +64,15 @@ def execute(hostname, command=None):
 #             key = paramiko.RSAKey.from_private_key_file(path, password)
 #         transport.auth_publickey(username, key)
 
-        key = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
+        rootkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
         try :
             transport.auth_publickey(username, rootkey)
-        except paramiko.AuthenticationException:
+        except paramiko.ssh_exception.AuthenticationException:
             print "trying debug"
             debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
             try :
                 transport.auth_publickey(username, debugkey)
-            except paramiko.AuthenticationException as e:
+            except paramiko.ssh_exception.AuthenticationException as e:
                 return (False, str(e))
 
         if not transport.is_authenticated():
