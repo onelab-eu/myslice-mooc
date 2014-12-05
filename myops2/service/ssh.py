@@ -4,9 +4,7 @@ import traceback
 import paramiko
 
 def execute(hostname, command=None):
-    # setup logging
-    paramiko.util.log_to_file('demo.log')
-    
+
     username = 'root'
     if hostname.find('@') >= 0:
         username, hostname = hostname.split('@')
@@ -27,7 +25,6 @@ def execute(hostname, command=None):
         return (False, str(e))
     
     try:
-        print "transport"
         transport = paramiko.Transport(sock)
         try:
             transport.start_client()
@@ -64,12 +61,11 @@ def execute(hostname, command=None):
 #             password = getpass.getpass('RSA key password: ')
 #             key = paramiko.RSAKey.from_private_key_file(path, password)
 #         transport.auth_publickey(username, key)
-        print "rootkey"
+
         rootkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
         try :
             transport.auth_publickey(username, rootkey)
         except paramiko.ssh_exception.AuthenticationException:
-            print "trying debug"
             debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
             try :
                 transport.auth_publickey(username, debugkey)
