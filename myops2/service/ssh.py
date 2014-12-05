@@ -64,10 +64,10 @@ def execute(hostname, command=None):
 #             key = paramiko.RSAKey.from_private_key_file(path, password)
 #         transport.auth_publickey(username, key)
         
-        rootkey = paramiko.RSAKey.from_private_key_file(os.path.join('etc','planetlab','planetlab_root_ssh_key.rsa'))
+        rootkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
         transport.auth_publickey(username, rootkey)
         
-        debugkey = paramiko.RSAKey.from_private_key_file(os.path.join('etc','planetlab','planetlab_debug_ssh_key.rsa'))
+        debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
         transport.auth_publickey(username, debugkey)
         
         if not transport.is_authenticated():
