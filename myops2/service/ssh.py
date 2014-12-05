@@ -63,13 +63,17 @@ def execute(hostname, command=None):
 #             password = getpass.getpass('RSA key password: ')
 #             key = paramiko.RSAKey.from_private_key_file(path, password)
 #         transport.auth_publickey(username, key)
-        
-        rootkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
-        transport.auth_publickey(username, rootkey)
-        
-        debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
-        transport.auth_publickey(username, debugkey)
-        
+
+        key = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_root_ssh_key.rsa')
+        try :
+            transport.auth_publickey(username, rootkey)
+        except paramiko.AuthenticationException:
+            debugkey = paramiko.RSAKey.from_private_key_file('/etc/planetlab/planetlab_debug_ssh_key.rsa')
+            try :
+                transport.auth_publickey(username, debugkey)
+            except paramiko.AuthenticationException as e:
+                return (False, str(e))
+
         if not transport.is_authenticated():
             transport.close()
             return (False, 'Authentication failed.')
