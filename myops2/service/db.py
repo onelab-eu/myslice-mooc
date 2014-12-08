@@ -52,8 +52,8 @@ class db(object) :
         for k,i in info.iteritems():
             c.append("%s='%s'" % (k, i))
         sql += ",".join(c)
-        sql = " WHERE hostname = '%s'" % (hostname)
+        sql += " WHERE hostname = '%s'" % (hostname)
         try :
             self.cursor.execute(sql)
         except Exception as e:
-            raise Exception("Unable to update data into database: %s (%s)" % (e,sql))
+            raise Exception("Unable to update data into database: %s (%s)" % (e,sql)
