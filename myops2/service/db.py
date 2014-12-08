@@ -49,5 +49,5 @@ class db(object) :
     def info_resource(self, hostname, info):
         sql = "UPDATE resources SET "
         for k,i in info.iteritems():
-            sql += "%s='%s', " (k, i)
+            sql += "%s='%s', " % (k, i)
         sql = "WHERE hostname = '%s'" % (hostname)
