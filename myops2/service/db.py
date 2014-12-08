@@ -45,3 +45,9 @@ class db(object) :
             self.cursor.execute("INSERT INTO monitor (hostname,status,timestamp) VALUES ('%s','%s',current_timestamp)" % (hostname,status))
         except Exception as e:
             raise Exception("Unable to insert data into database: %s" % e)
+
+    def info_resource(self, hostname, info):
+        sql = "UPDATE resources SET "
+        for k,i in info:
+            sql += "%s='%s', " (k, i)
+        sql = "WHERE hostname = '%s'" % (hostname)

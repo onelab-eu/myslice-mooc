@@ -67,6 +67,12 @@ def agent(num, input):
                 print "+=> (%s) %s is ok" % (node.boot, node.hostname)
                 availability = 1
                 status = "up"
+                #updates info about the node (testing)
+                d.info_resource(node.hostname, {
+                    'ipv4' : node.ip(4),
+                    'ipv6' : node.ip(6),
+                })
+
         
         ''' send OML stream '''
         oml.availability(node.hostname, availability)
