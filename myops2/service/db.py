@@ -47,9 +47,11 @@ class db(object) :
             raise Exception("Unable to insert data into database: %s" % e)
 
     def info_resource(self, hostname, info):
+        c = []
         sql = "UPDATE resources SET "
         for k,i in info.iteritems():
-            sql += "%s='%s', " % (k, i)
+            c.append("%s='%s'" % (k, i))
+        sql += ",".join(c)
         sql = "WHERE hostname = '%s'" % (hostname)
         try :
             self.cursor.execute(sql)
