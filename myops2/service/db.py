@@ -56,4 +56,4 @@ class db(object) :
         try :
             self.cursor.execute(sql)
         except Exception as e:
-            raise Exception("Unable to update data into database: %s" % e)
+            raise Exception("Unable to update data into database: %s (%s)" % (e,sql))
