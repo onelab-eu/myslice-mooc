@@ -59,6 +59,8 @@ class db(object):
         for k, i in info.iteritems():
             if i is not None and i.strip() != "":
                 c.append("%s='%s'" % (k, i))
+        if not c:
+            return
         sql += ",".join(c)
         sql += " WHERE hostname = '%s'" % (hostname)
         try:
