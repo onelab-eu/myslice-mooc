@@ -57,7 +57,7 @@ class db(object):
         c = []
         sql = "UPDATE resources SET "
         for k, i in info.iteritems():
-            if i is not None:
+            if i is not None and i != "":
                 c.append("%s='%s'" % (k, i))
         sql += ",".join(c)
         sql += " WHERE hostname = '%s'" % (hostname)
