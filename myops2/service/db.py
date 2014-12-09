@@ -58,7 +58,7 @@ class db(object):
         sql = "UPDATE resources SET "
         for k, i in info.iteritems():
             if i is not None and i.strip() != "":
-                c.append("%s='%s'" % (k, i))
+                c.append("%s='%s'" % (k, i.strip()))
         if not c:
             return
         sql += ",".join(c)
