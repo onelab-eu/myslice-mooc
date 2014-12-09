@@ -69,7 +69,7 @@ def agent(num, input):
                 status = "up"
                 #updates info about the node (testing)
                 d.info_resource(node.hostname, {
-                    'ipv4' : node.ip(4),
+                    #'ipv4' : node.ip(4),
                     'ipv6' : node.ip(6),
                 })
 
