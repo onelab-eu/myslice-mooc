@@ -28,11 +28,15 @@ def resources():
         
         d = db()
         ''' PLE nodes '''
-        nodes = Query('Nodes').ple().execute()
-        for node in nodes :
-            d.update_resource(node)
-        d.commit()
-        d.close()
+        try :
+            nodes = Query('Nodes').ple().execute()
+            for node in nodes :
+                d.update_resource(node)
+            d.commit()
+            d.close()
+        except Exception as e:
+            print "Service does not seem to be available"
+            print e
         time.sleep(86400)
 
 ''' A thread that will check resource availability and information
