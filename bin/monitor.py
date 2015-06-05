@@ -14,6 +14,9 @@ import datetime
 import logging
 import threading
 
+import lib.settings
+
+exit(0)
 sys.path.append(os.path.realpath(os.path.dirname(__file__) + '/..'))
 
 from lib.queue import OrderedSetQueue

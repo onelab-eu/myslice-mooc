@@ -1,4 +1,5 @@
 import os
+from lib.settings import store
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 

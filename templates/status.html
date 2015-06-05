@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block body %}
+  <table class="table table-striped">
+  
+  {% for r in resources %}
+  <tr>
+    <td>{{ r.hostname }}</td>
+    <td>{{ r.ipv4 }}</td>
+    <td>{{ r.ipv6 }}</td>
+    <td>{{ r.status }}</td>
+    <td>{{ r.last_checked }}</td>
+  </tr>
+  {% endfor %}
+  
+  </table>
+{% endblock %}
