@@ -8,6 +8,7 @@ setup(name='myops2',
       author_email='ciro.scognamiglio@lip6.fr',
       license='MIT',
       packages=['myops2'],
+      scripts=['bin/myops2-monitor', 'bin/myops2-shell', 'bin/myops2-web'],
       #data_files=[('/etc', ['config/planetlab.cfg-dist']),
       #            ('/etc/init.d', ['init/myops2'])],
       zip_safe=False)
