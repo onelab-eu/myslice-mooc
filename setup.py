@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='myops2',
-      version='2.0.1',
+      version='2.0.0',
       description='MyOps 2',
       url='',
       author='Ciro Scognamiglio',
