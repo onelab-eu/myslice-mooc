@@ -18,17 +18,19 @@ from tornado import web, ioloop
 #sys.path.append(os.path.realpath(os.path.dirname(__file__) + '/..'))
 #print os.path.realpath(os.path.dirname(__file__) + '/..')
 
-from myops2.protocol import rest, websocket
+from myops2.web import templates, static
+from myops2.web.protocols import rest, websocket
+from myops2.web.controllers import home
 
 if __name__ == '__main__':
 
     print "Starting web thread"
 
     app = web.Application([
-        (r'/', controllers.home.Index),
-        (r'/static/(.*)', web.StaticFileHandler, {'path': site.static}),
+        (r'/', home.Index),
+        (r'/static/(.*)', web.StaticFileHandler, {'path': static}),
 
-    ], template_path=site.templates)
+    ], template_path = templates)
 
     app.listen(8111)
 

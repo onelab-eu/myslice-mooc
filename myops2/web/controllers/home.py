@@ -1,8 +1,6 @@
-import os
 from tornado import web
 
-templates = os.path.realpath(os.path.dirname(__file__) + '/../templates')
-static = os.path.realpath(os.path.dirname(__file__) + '/../static')
+from myops2.web import templates
 
 class Index(web.RequestHandler):
     def get(self):
