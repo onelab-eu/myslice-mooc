@@ -14,30 +14,25 @@ import datetime
 import logging
 import threading
 
-import myops2.settings
+import myops2.lib.store as s
+from myops2.lib.queue import OrderedSetQueue
+from myops2.settings import Config
 
-exit(1)
+# workers
+from myops2.monitor.workers.status import agent
+from myops2.monitor.workers.resources import sync, queue
 
-from myops2.queue import OrderedSetQueue
-#import lib.oml
+from planetlab.query import Query
 
-from lib.worker import resources
-
-try:
-    import lib.store as s
-except ImportError:
-    logging.error("RethinkDB required")
-    exit(1)
-
-try:
-    from planetlab.query import Query
-except ImportError:
-    logging.error("PlanetLab lib required")
-    exit(1)
+logging.basicConfig(level=logging.DEBUG,
+                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    filename="myops2-monitor.log", filemode="a")
 
 
 def receive_signal(signum, stack):
-    print 'Received:', signum
+    #logger = logging.getLogger("myops2.main")
+    logger.info('Received signal %s', signum)
     raise SystemExit('Exiting')
 
 
@@ -89,30 +84,76 @@ def receive_signal(signum, stack):
 
             
 if __name__ == '__main__':
+
     signal.signal(signal.SIGINT, receive_signal)
     signal.signal(signal.SIGTERM, receive_signal)
+    signal.signal(signal.SIGHUP, receive_signal)
 
-    ''' setup storage '''
+    logger = logging.getLogger("myops2.main")
+
+    """
+    Setup DB Store (Rethinkdb)
+    """
     s.setup()
+
+    """
+    SetUp supported Testbeds
+    """
+    s.testbeds()
+
+    #
+    # '''
+    #     resource discovery thread: will retrieve resources from a remote end
+    # '''
+    # logger.info("Starting resources thread")
+    # t = threading.Thread(target=sync)
+    # t.daemon = True
+    # t.start()
 
     ''' input queue '''
     input = OrderedSetQueue()
 
-    ''' resources thread '''
-    print "Starting resources thread"
-    t = threading.Thread(target=resources.sync)
-    t.daemon = True
-    t.start()
-
     # agent threads
-    # threads = []
-    # for y in range(20):
-    #     t = threading.Thread(target=agent, args=(y, input))
-    #     t.daemon = True
-    #     threads.append(t)
-    #     t.start()
+    threads = []
+    for y in range(10):
+        t = threading.Thread(target=agent, args=(y, input))
+        t.daemon = True
+        threads.append(t)
+        t.start()
 
-    ## main thread, periodically put resources to monitor
-    ## in the input queue
 
-    t.join()
+
+
+    while True:
+
+        try:
+            nodes = Query('Nodes').peer(None).execute()
+
+            c = s.connect()
+
+            for node in nodes:
+                #site = node.site
+                s.resource(c,
+                    {
+                        "testbed": "ple",
+                        "hostname": node.hostname
+                        # "site": {
+                        #     "id": site.site_id,
+                        #     "name" : site.name,
+                        #     "short": site.abbreviated_name,
+                        #     "login_base": site.login_base
+                        # }
+                    }
+                )
+                input.put(node.hostname)
+
+            #s.resources()
+
+
+
+        except Exception as e:
+            logger.exception("Service does not seem to be available")
+
+        time.sleep(86400)
+
+    #t.join()

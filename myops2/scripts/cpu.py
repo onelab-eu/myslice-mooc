@@ -43,4 +43,4 @@ if __name__ == '__main__':
                 if line.startswith('cache size'):
                     cpu["cache"] = line.split(':')[1].strip()
 
-    print json.dumps(cpu)
+    print json.dumps({ 'cpu' : cpu })

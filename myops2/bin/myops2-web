@@ -30,21 +30,14 @@ if __name__ == '__main__':
         (r'/', home.Index),
         (r'/static/(.*)', web.StaticFileHandler, {'path': static}),
 
+        (r'/api/resources', rest.Resources),
+
+        (r'/ws', websocket.Api)
+
     ], template_path = templates)
 
     app.listen(8111)
 
-    api = web.Application([
-        (r'/api', rest.Api),
-    ])
-
-    api.listen(8112)
-
-    socket = web.Application([
-        (r'/ws', websocket.Api)
-    ])
-
-    socket.listen(9001)
 
     try :
         ioloop.IOLoop.instance().start()

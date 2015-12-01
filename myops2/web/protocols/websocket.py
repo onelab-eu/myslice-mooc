@@ -13,7 +13,7 @@ class Api(websocket.WebSocketHandler):
     def open(self):
         if self not in cl:
             cl.append(self)
-        logger.warning("WebSocket opened (%s)" % self.request.remote_ip)
+        logger.info("WebSocket opened (%s)" % self.request.remote_ip)
 
     def on_message(self, message):
         self.write_message(u"Waiting for changes")
@@ -30,7 +30,7 @@ class Api(websocket.WebSocketHandler):
         try :
             conn = yield r.connect(host="localhost", port=28015)
         except r.RqlDriverError :
-            logger.warning("can't connect to RethinkDB")
+            logger.error("can't connect to RethinkDB")
             self.write_message(json.dumps({ "ret" : 0, "msg" : "connection error" }, ensure_ascii = False))
 
         if (conn) :
