@@ -1,9 +1,14 @@
 from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, Error
 import os
-
+import logging
+import sys
 
 class Config:
-
+    rethinkdb = {
+            "host"  : "localhost",
+            "port"  : 28015,
+            "db"    : "myops2"
+        }
 
     def __init__(self):
         self.system = os.path.abspath("/etc/myops2")
@@ -21,6 +26,8 @@ class Config:
 
         print s
         #print config.sections()
+
+
 
     def get(self, section, key, default = None):
         try :
