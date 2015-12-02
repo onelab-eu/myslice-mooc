@@ -5,64 +5,64 @@
 
     (c) 2014 - 2015 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
 '''
-import logging
+
 import time
 import datetime
-
-import lib.store as s
-from planetlab.query import Query
 import random
+import logging
 
+from planetlab.query import Query
+
+import myops2.lib.store as s
+
+logger = logging.getLogger('myops2.worker.resource')
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    filename="myops2-monitor.log", filemode="a")
+
+'''
+    resource discovery thread: will retrieve resources from a remote end
+        - it will not remove old resources that were deleted/removed from remote end db
+'''
 def sync():
+
+    logger = logging.getLogger(__name__)
+
+    ''' DB connection '''
+    c = s.connect()
+
     """
     This worker retrieves the list of resources from the testbed(s)
     """
     while True:
-        print "Retreiving resources %s" % (datetime.datetime.now())
+        logger.info("Retreiving resources %s", datetime.datetime.now())
 
-        ''' test '''
-        while True:
-            data = random.randint(1, 1000000)
-            s.update({
-                "test" : data
-            })
-            print data
-            time.sleep(1)
-        exit(0)
         ''' PLE nodes '''
         try:
             nodes = Query('Nodes').ple().execute()
             for node in nodes:
-                site = node.site
-                s.update({
-                    "hostname": node.hostname,
-                    "testbed": {
-                        "name": "PlanetLab Europe",
-                        "short": "PLE",
-                        "facility": "onelab"
-                    },
-                    "site": {
-                        "id": site.site_id,
-                        "name" : site.name,
-                        "short": site.abbreviated_name,
-                        "login_base": site.login_base
+                s.resource(c,
+                    {
+                        "testbed": "ple",
+                        "hostname": node.hostname
                     }
-                })
+                )
 
         except Exception as e:
-            print "Service does not seem to be available"
-            print e
+            logger.exception("Service does not seem to be available")
             exit(1)
         exit(0)
         #time.sleep(86400)
 
+'''
+    resource prepare thread: will prepare resources to be checked
+    - will double check if the resource still exists on the remote end, if not it will
+      delete it (or disable) locally.
+    - will retrieve resources last checked X seconds ago and put them in the input queue
+'''
 def queue(input):
-    """
-    This worker is responsible of putting resources to monitor in the input queue
-    input: the input queue
 
-    """
-    logging.info("Main Thread")
     while True:
         resources = s.select()
         if resources:

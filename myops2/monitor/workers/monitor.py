@@ -7,7 +7,7 @@
 '''
 import logging
 
-import lib.store as s
+import myops2.lib.store as s
 from planetlab.query import Query
 
 def availability(input):
@@ -15,14 +15,16 @@ def availability(input):
     This worker will try to check for resource availability
 
     """
-    logging.info("Agent %s starting" % num)
+    logger = logging.getLogger(__name__)
+
+    logger.info("Agent %s starting" % num)
 
     while True:
         resource = input.get()
 
         node = Query('Nodes').hostname(resource).execute().first()
 
-        s.update({
+        s.resource({
             "hostname": node.hostname,
             "bootstate": node.boot,
             "status": status

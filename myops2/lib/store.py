@@ -1,48 +1,98 @@
-import os
-from lib.settings import store
+import logging
+from datetime import datetime
+
+from myops2.settings import Config
+
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
-RDB_HOST = 'localhost'
-RDB_PORT = 28015
-RDB_DB = 'myops2'
+logger = logging.getLogger(__name__)
 
+def connect():
+    try :
+        return r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError :
+        logger.error("Can't connect to RethinkDB")
+        raise SystemExit("Can't connect to RethinkDB")
 
 def setup():
-    """Return Boolean
+    tables = [
+        {
+            'name' : 'testbeds',
+            'pkey' : 'id'
+        },
+        {
+            'name' : 'resources',
+            'pkey' : 'hostname'
+        }
+    ]
 
-    Initial setup
-    """
-    try:
-        connection = connect()
-    except RqlDriverError as e:
-        print e
-        print "RethinkDB database not configured or not reachable"
-        exit(1)
+    c = connect()
 
     try:
-        r.db_create(RDB_DB).run(connection)
-        print 'MyOps2 database setup completed.'
+        r.db_create(Config.rethinkdb["db"]).run(c)
+        logger.info('MyOps2 database created successfully')
     except RqlRuntimeError:
-        print 'MyOps2 database already exists.'
+        logger.info('MyOps2 database already exists')
 
-    try:
-        r.db(RDB_DB).table_create('resources', primary_key='hostname').run(connection)
-        print 'MyOps2 table resources setup completed.'
-    except RqlRuntimeError:
-        print 'MyOps2 table resources already exists.'
-    finally:
-        connection.close()
+    for t in tables:
+        try:
+            r.db(Config.rethinkdb["db"]).table_create(t['name'], primary_key=t['pkey']).run(c)
+            logger.info('MyOps2 table %s setup completed', t['name'])
+        except RqlRuntimeError:
+            logger.info('MyOps2 table %s already exists', t['name'])
+
+    c.close()
 
 
-def connect(host=RDB_HOST, port=RDB_PORT):
-    return r.connect(host, port)
+def testbeds():
+
+    c = connect()
+
+    r.table('testbeds').insert(
+        {
+            "id": "ple",
+            "name": "PlanetLab Europe",
+            "short": "PLE",
+        }, conflict='update').run(c)
+
+    c.close()
+
+def resources(c=None, filter=None):
+
+    if not c:
+        #print("connecting")
+        c = connect()
+
+    if filter:
+        # not yet implemented
+        pass
+    else:
+        for res in r.table('resources').run(c):
+            pass
+            #print res
+        return {"hello":"bye"}
+
+
+def resource(c, resource=None):
+
+    if resource:
+        # updating
+
+        # timestamp is stored as a rethinkdb expression,
+        # will be retrieved as a native python dateobject
+        #resource['timestamp'] = r.expr(datetime.now())
+        resource['timestamp'] = r.now()
+
+        r.table('resources').insert(resource, conflict='update').run(c)
+    else:
+        return r.table('resources').run(c)
 
 
 def select(id=None, filter=None, c=None):
     if not c:
         c = connect()
-    x = r.db(RDB_DB).table('resources')
+    x = r.db(Config.rethinkdb["db"]).table('resources')
     if id:
         x = r.get(id)
     if filter:
@@ -53,9 +103,9 @@ def select(id=None, filter=None, c=None):
 def update(data, c=None):
     if not c:
         c = connect()
-    r.db(RDB_DB).table('resources').insert(data, conflict='update').run(c)
+    r.db(Config.rethinkdb["db"]).table('resources').insert(data, conflict='update').run(c)
 
 def changes(c=None):
     if not c:
         c = connect()
-    return r.db(RDB_DB).table('resources').changes().run(c)
+    return r.db(Config.rethinkdb["db"]).table('resources').changes().run(c)
