@@ -1,56 +1,15 @@
 {% extends "layout.html" %}
 {% block head %}
-<script type="text/javascript">
-     var sock = null;
-     var ellog = null;
-     window.onload = function() {
-        ellog = document.getElementById('log');
-        var wsuri;
-
-        wsuri = "ws://" + window.location.hostname + ":9001/ws";
-        if ("WebSocket" in window) {
-           sock = new WebSocket(wsuri);
-        } else if ("MozWebSocket" in window) {
-           sock = new MozWebSocket(wsuri);
-        } else {
-           log("Browser does not support WebSocket!");
-           window.location = "http://autobahn.ws/unsupportedbrowser";
-        }
-        if (sock) {
-           sock.onopen = function() {
-              log("Connected to " + wsuri);
-           }
-           sock.onclose = function(e) {
-              log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
-              sock = null;
-           }
-           sock.onmessage = function(e) {
-              log("Got echo: " + e.data);
-           }
-        }
-        window.setTimeout(function() {
-            send("HELLO!");
-        }, 1000);
-     };
-     function send(msg) {
-
-        if (sock) {
-           sock.send(msg);
-           log("Sent: " + msg);
-        } else {
-           log("Not connected.");
-        }
-     };
-     function log(m) {
-        ellog.innerHTML += m + '<br>\n';
-        //ellog.scrollTop = ellog.scrollHeight;
-        console.log(m)
-     };
-
-</script>
+<script src="/static/js/websocket.js"></script>
+<script type="text/jsx" src="/static/js/resources.jsx"></script>
 {% end %}
 {% block body %}
 <div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div id="content"></div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <div id="connection"></div>
