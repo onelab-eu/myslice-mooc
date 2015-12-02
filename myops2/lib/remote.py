@@ -8,7 +8,7 @@ from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, A
 
 # static atm
 username = 'root'
-rsa_private_key = "/Users/moray/.ssh/planetlab_root_ssh_key.rsa"
+rsa_private_key = "/root/.ssh/planetlab_root_ssh_key.rsa"
 remote_dir = "/root/.myops2"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
