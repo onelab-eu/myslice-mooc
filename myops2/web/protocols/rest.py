@@ -2,6 +2,8 @@ import json, logging
 import decimal
 from datetime import date, datetime
 from tornado import web, gen
+import tornado_cors as cors
+from tornado_cors import custom_decorator
 
 from myops2.settings import Config
 import rethinkdb as r
@@ -49,11 +51,12 @@ def connect():
 #                      'release_date': date.today().isoformat() }
 #         self.write(response)
 
-class Resources(web.RequestHandler):
+class Resources(cors.CorsMixin, web.RequestHandler):
 
     @gen.coroutine
     def get(self, *args):
         resources = []
+        CORS_ORIGIN = '*'
 
         connection = yield connect()
 
@@ -74,11 +77,16 @@ class Resources(web.RequestHandler):
         #for c in cl:
         #    c.write_message(data)
 
-class Job(web.RequestHandler):
+    @web.asynchronous
+    def post(self):
+        pass
 
+class Job(cors.CorsMixin, web.RequestHandler):
+    
     @gen.coroutine
     def get(self, *args):
         jobs = []
+        CORS_ORIGIN = '*'
 
         connection = yield connect()
 
@@ -91,7 +99,7 @@ class Job(web.RequestHandler):
         #self.write({"resources": resources})
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
+
     @web.asynchronous
     def post(self):
         pass
-
