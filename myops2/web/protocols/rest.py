@@ -74,6 +74,23 @@ class Resources(web.RequestHandler):
         #for c in cl:
         #    c.write_message(data)
 
+class Job(web.RequestHandler):
+
+    @gen.coroutine
+    def get(self, *args):
+        jobs = []
+
+        connection = yield connect()
+
+        cursor = yield r.table('jobs').run(connection)
+
+        while (yield cursor.fetch_next()):
+            item = yield cursor.next()
+            jobs.append(item)
+
+        #self.write({"resources": resources})
+        self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
+
     @web.asynchronous
     def post(self):
         pass
