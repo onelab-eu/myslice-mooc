@@ -105,6 +105,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
         jobs = []
         #jobs = tornado.escape.json_decode(self.request.body)
         jobs = json.loads(self.request.body)
+        print jobs
 
         connection = yield connect()
 
@@ -112,5 +113,4 @@ class Job(cors.CorsMixin, web.RequestHandler):
 
         yield r.table("jobs").insert(jobs).run(connection)
 
-        self.write("Request received.")
-        #self.write(json.loads({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
+        self.write({"jobs": jobs})
