@@ -1,4 +1,4 @@
-import json, logging
+import json, logging, time
 import decimal
 from datetime import date, datetime
 from tornado import web, gen
@@ -105,7 +105,22 @@ class Job(cors.CorsMixin, web.RequestHandler):
         jobs = []
         #jobs = tornado.escape.json_decode(self.request.body)
         jobs = json.loads(self.request.body)
-        print jobs
+
+        ts = time.time()
+        # Adding additional info to the json
+        for data in jobs:
+            data["jobstatus"]       = "waiting"
+            data["message"]         = "waiting to be executed"
+            data["created"]         = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            data["started"]         = ""
+            data["completed"]       = ""
+            data["returnstatus"]    = ""
+            data["stdout"]          = ""
+            data["stderr"]          = ""
+
+            json.dumps(data)
+
+        #print jobs
 
         connection = yield connect()
 
