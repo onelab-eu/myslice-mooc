@@ -100,6 +100,17 @@ class Job(cors.CorsMixin, web.RequestHandler):
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
 
-    @web.asynchronous
-    def post(self):
-        pass
+    @gen.coroutine
+    def post(self, *args):
+        jobs = []
+        #jobs = tornado.escape.json_decode(self.request.body)
+        jobs = json.loads(self.request.body)
+
+        connection = yield connect()
+
+        yield r.table('jobs').run(connection)
+
+        yield r.table("jobs").insert(jobs).run(connection)
+
+        self.write("Request received.")
+        #self.write(json.loads({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
