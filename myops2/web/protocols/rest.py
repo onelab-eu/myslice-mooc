@@ -126,6 +126,12 @@ class Job(cors.CorsMixin, web.RequestHandler):
 
         yield r.table('jobs').run(connection)
 
-        yield r.table("jobs").insert(jobs).run(connection)
+        rows = yield r.table("jobs").insert(jobs).run(connection)
 
-        self.write({"jobs": jobs})
+        ids =[]
+        # getting the generated keys from the DB
+        for key in rows['generated_keys']:
+            ids.append(key)
+
+
+        self.write(json.dumps({"id": ids}))
