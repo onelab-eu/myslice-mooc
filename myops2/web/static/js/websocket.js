@@ -3,6 +3,7 @@ feed = (function() {
     var socket = null;
     //var ellog = document.getElementById('log');
     var wsuri = "ws://" + window.location.hostname + ":8111/ws";
+    var el = $('#log');
 
     return {
         connect: function ()
@@ -12,20 +13,32 @@ feed = (function() {
             } else if ("MozWebSocket" in window) {
                 socket = new MozWebSocket(wsuri);
             } else {
-                log("Browser does not support WebSocket!");
+                console.log("Browser does not support WebSocket!");
             }
             if (socket) {
                 socket.onopen = function () {
-                    log("Connected to " + wsuri);
+                    console.log("Connected to " + wsuri);
+                    socket.send('hello');
                 }
 
                 socket.onclose = function (e) {
-                    log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
+                    console.log("Connection closed (wasClean = " + e.wasClean + ", code = " + e.code + ", reason = '" + e.reason + "')");
                     socket = null;
                 }
 
                 socket.onmessage = function(e) {
-                    log("Got echo: " + e.data);
+                    var result = JSON.parse(e.data);
+                    console.log(result);
+                    if (result.id) {
+                        el.prepend('<div>' +
+                            '<b>Job:</b> ' + result.id +
+                            ' <b>Status:</b> ' + result.jobstatus +
+                            ' <b>Command:</b> ' + result.command +
+                            ' <b>Message:</b> ' + result.message +
+                            '</div>')
+                    } else {
+                        el.append('<div>'+result.message+'</div>');
+                    }
                 }
             }
         },
@@ -34,16 +47,10 @@ feed = (function() {
         {
             if (socket) {
                 socket.send(msg);
-                log("Sent: " + msg);
+                console.log("Sent: " + msg);
             } else {
-                log("Not connected.");
+                console.log("Not connected.");
             }
-        },
-
-        log: function(msg) {
-            //ellog.innerHTML += m + '<br>\n';
-            //ellog.scrollTop = ellog.scrollHeight;
-            console.log(msg)
         },
 
         resources: function()
