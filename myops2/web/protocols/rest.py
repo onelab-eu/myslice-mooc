@@ -53,10 +53,13 @@ def connect():
 
 class Resources(cors.CorsMixin, web.RequestHandler):
 
+    def set_default_headers(self):
+        # to allow CORS
+        self.set_header("Access-Control-Allow-Origin", "*")
+
     @gen.coroutine
     def get(self, *args):
         resources = []
-        CORS_ORIGIN = '*'
 
         connection = yield connect()
 
@@ -82,11 +85,14 @@ class Resources(cors.CorsMixin, web.RequestHandler):
         pass
 
 class Job(cors.CorsMixin, web.RequestHandler):
-    
+
+    def set_default_headers(self):
+        # to allow CORS
+        self.set_header("Access-Control-Allow-Origin", "*")
+
     @gen.coroutine
     def get(self, *args):
         jobs = []
-        CORS_ORIGIN = '*'
 
         connection = yield connect()
 
@@ -96,13 +102,13 @@ class Job(cors.CorsMixin, web.RequestHandler):
             item = yield cursor.next()
             jobs.append(item)
 
-        #self.write({"resources": resources})
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
 
     @gen.coroutine
     def post(self, *args):
-        jobs = []
+        #post body must be a list
+        #jobs = []
         #jobs = tornado.escape.json_decode(self.request.body)
         jobs = json.loads(self.request.body)
 
@@ -120,7 +126,6 @@ class Job(cors.CorsMixin, web.RequestHandler):
 
             json.dumps(data)
 
-        #print jobs
 
         connection = yield connect()
 
@@ -132,6 +137,5 @@ class Job(cors.CorsMixin, web.RequestHandler):
         # getting the generated keys from the DB
         for key in rows['generated_keys']:
             ids.append(key)
-
 
         self.write(json.dumps({"id": ids}))
