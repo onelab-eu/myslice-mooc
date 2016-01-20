@@ -1,7 +1,9 @@
-import json, logging
+import json, logging, time
 import decimal
 from datetime import date, datetime
 from tornado import web, gen
+import tornado_cors as cors
+from tornado_cors import custom_decorator
 
 from myops2.settings import Config
 import rethinkdb as r
@@ -49,7 +51,11 @@ def connect():
 #                      'release_date': date.today().isoformat() }
 #         self.write(response)
 
-class Resources(web.RequestHandler):
+class Resources(cors.CorsMixin, web.RequestHandler):
+
+    def set_default_headers(self):
+        # to allow CORS
+        self.set_header("Access-Control-Allow-Origin", "*")
 
     @gen.coroutine
     def get(self, *args):
@@ -78,3 +84,58 @@ class Resources(web.RequestHandler):
     def post(self):
         pass
 
+class Job(cors.CorsMixin, web.RequestHandler):
+
+    def set_default_headers(self):
+        # to allow CORS
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    @gen.coroutine
+    def get(self, *args):
+        jobs = []
+
+        connection = yield connect()
+
+        cursor = yield r.table('jobs').run(connection)
+
+        while (yield cursor.fetch_next()):
+            item = yield cursor.next()
+            jobs.append(item)
+
+        self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
+
+
+    @gen.coroutine
+    def post(self, *args):
+        #post body must be a list
+        #jobs = []
+        #jobs = tornado.escape.json_decode(self.request.body)
+        jobs = json.loads(self.request.body)
+
+        ts = time.time()
+        # Adding additional info to the json
+        for data in jobs:
+            data["jobstatus"]       = "waiting"
+            data["message"]         = "waiting to be executed"
+            data["created"]         = datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            data["started"]         = ""
+            data["completed"]       = ""
+            data["returnstatus"]    = ""
+            data["stdout"]          = ""
+            data["stderr"]          = ""
+
+            json.dumps(data)
+
+
+        connection = yield connect()
+
+        yield r.table('jobs').run(connection)
+
+        rows = yield r.table("jobs").insert(jobs).run(connection)
+
+        ids =[]
+        # getting the generated keys from the DB
+        for key in rows['generated_keys']:
+            ids.append(key)
+
+        self.write(json.dumps({"id": ids}))
