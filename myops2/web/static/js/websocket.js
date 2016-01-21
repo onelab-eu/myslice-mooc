@@ -35,7 +35,10 @@ feed = (function() {
                             ' <b>Status:</b> ' + result.jobstatus +
                             ' <b>Command:</b> ' + result.command +
                             ' <b>Message:</b> ' + result.message +
-                            '</div>')
+                            '</div>');
+                        if (result.stdout) {
+                            el.prepend('<div><b>Output:</b><pre>' + result.stdout + '</pre></div>')
+                        }
                     } else {
                         el.append('<div>'+result.message+'</div>');
                     }
