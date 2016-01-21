@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+import signal
+import threading
+import logging
+import rethinkdb as r
+from rethinkdb.errors import RqlRuntimeError, RqlDriverError
+
+from myops2.settings import Config
+from myops2.lib.queue import OrderedSetQueue
+from myops2.monitor.workers.mooc import process_job
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    filename="myops2-mooc.log", filemode="a")
+
+logger = logging.getLogger(__name__)
+
+
+
+def receive_signal(signum, stack):
+    logger.info('Received signal %s', signum)
+
+    try :
+        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError :
+        raise SystemExit("Can't connect to RethinkDB")
+
+    logger.info('Cleaning up (deleting all jobs)')
+    r.table("jobs").delete().run(c)
+
+    raise SystemExit('Exiting')
+
+
+if __name__ == '__main__':
+
+    signal.signal(signal.SIGINT, receive_signal)
+    signal.signal(signal.SIGTERM, receive_signal)
+    signal.signal(signal.SIGHUP, receive_signal)
+
+    try :
+        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError :
+        raise SystemExit("Can't connect to RethinkDB")
+
+    # setup
+    try:
+        r.db(Config.rethinkdb["db"]).table_create('jobs').run(c)
+    except RqlRuntimeError:
+        pass
+
+
+    ''' input queue '''
+    input = OrderedSetQueue()
+
+    # mooc threads
+    threads = []
+    for y in range(2):
+        t = threading.Thread(target=process_job, args=(y, input))
+        t.daemon = True
+        threads.append(t)
+        t.start()
+
+
+    # main
+    feed = r.table('jobs').changes().run(c)
+    for change in feed:
+        if (change['new_val']['jobstatus'] == 'waiting'):
+            input.put(change['new_val']['id'])
+
+    c.close()
