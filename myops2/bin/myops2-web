@@ -20,7 +20,12 @@ from tornado import web, ioloop
 
 from myops2.web import templates, static
 from myops2.web.protocols import rest, websocket
-from myops2.web.controllers import home
+from myops2.web.controllers import home, jobs
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    filename="myops2-web.log", filemode="a")
 
 if __name__ == '__main__':
 
@@ -29,6 +34,7 @@ if __name__ == '__main__':
     app = web.Application([
         (r'/', home.Index),
         (r'/static/(.*)', web.StaticFileHandler, {'path': static}),
+        (r'/jobs', jobs.Log),
 
         (r'/api/resources', rest.Resources),
         (r'/api/job', rest.Job),
