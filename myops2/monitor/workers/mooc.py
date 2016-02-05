@@ -55,6 +55,19 @@ def process_job(num, input):
                 'stdout': '',
                 'stderr': result['message']
             }
+        # preventing second command execution
+        black_list = ['&&', '&', ';', '||']
+        if any(black in j['parameters']['arg'] for black in black_list):
+            logger.info("Hacking argument detected : (%s)" % (j['parameters']['arg']))
+            upd = {
+                'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'jobstatus': 'finished',
+                'message': 'Hack argument detected : %s ' % j['parameters']['arg'],
+                'returnstatus': 1,
+                'stdout': '',
+                'stderr': ''
+            }
+
         else :
             logger.info("Running job on %s" % (j['node']))
 
