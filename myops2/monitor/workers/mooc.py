@@ -55,6 +55,8 @@ def process_job(num, input):
                 'stdout': '',
                 'stderr': result['message']
             }
+            #TODO - put the below code in the right place
+            '''
         # preventing second command execution
         black_list = ['&&', '&', ';', '||']
         if any(black in j['parameters']['arg'] for black in black_list):
@@ -67,7 +69,7 @@ def process_job(num, input):
                 'stdout': '',
                 'stderr': ''
             }
-
+            '''
         else :
             logger.info("Running job on %s" % (j['node']))
 

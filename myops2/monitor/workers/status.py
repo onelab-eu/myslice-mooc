@@ -18,9 +18,6 @@ def agent(num, input):
     """
     logger.info("Agent %s starting" % num)
 
-    ''' DB connection '''
-    c = s.connect()
-
     while True:
         resource = input.get() # resource hostname
 
@@ -70,11 +67,11 @@ def agent(num, input):
         else :
             logger.info("%s : Setup complete" % (resource))
 
-        s.resource(c, {
+        s.resource({
             "hostname": node.hostname,
             "state": node.boot_state,
             "access" : result
         })
-
-        # ''' send OML stream '''
+        
+	# ''' send OML stream '''
         # oml.availability(node.hostname, availability)

@@ -68,6 +68,8 @@ class Resources(cors.CorsMixin, web.RequestHandler):
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
             resources.append(item)
+	
+	connection.close()
 
         #self.finish()
         #id = self.get_argument("id")
@@ -101,6 +103,8 @@ class Job(cors.CorsMixin, web.RequestHandler):
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
             jobs.append(item)
+	
+	connection.close()
 
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
@@ -137,5 +141,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
         # getting the generated keys from the DB
         for key in rows['generated_keys']:
             ids.append(key)
+
+	connection.close()
 
         self.write(json.dumps({"id": ids}))

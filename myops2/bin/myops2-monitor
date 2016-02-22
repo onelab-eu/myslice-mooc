@@ -115,12 +115,11 @@ if __name__ == '__main__':
 
     # agent threads
     threads = []
-    for y in range(10):
+    for y in range(2):
         t = threading.Thread(target=agent, args=(y, input))
         t.daemon = True
         threads.append(t)
         t.start()
-
 
 
 
@@ -129,11 +128,9 @@ if __name__ == '__main__':
         try:
             nodes = Query('Nodes').peer(None).execute()
 
-            c = s.connect()
-
             for node in nodes:
                 #site = node.site
-                s.resource(c,
+                s.resource(
                     {
                         "testbed": "ple",
                         "hostname": node.hostname

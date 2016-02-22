@@ -74,11 +74,10 @@ def resources(c=None, filter=None):
         return {"hello":"bye"}
 
 
-def resource(c, resource=None):
-
+def resource(resource=None):
+    c = connect()
     if resource:
         # updating
-
         # timestamp is stored as a rethinkdb expression,
         # will be retrieved as a native python dateobject
         #resource['timestamp'] = r.expr(datetime.now())
@@ -86,8 +85,9 @@ def resource(c, resource=None):
 
         r.table('resources').insert(resource, conflict='update').run(c)
     else:
-        return r.table('resources').run(c)
-
+        resource = r.table('resources').run(c)
+    c.close()
+    return resource
 
 def select(id=None, filter=None, c=None):
     if not c:
