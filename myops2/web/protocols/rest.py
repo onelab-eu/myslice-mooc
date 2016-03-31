@@ -104,7 +104,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
             item = yield cursor.next()
             jobs.append(item)
 	
-	connection.close()
+        connection.close()
 
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 

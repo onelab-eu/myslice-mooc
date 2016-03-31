@@ -74,11 +74,16 @@ def process_job(num, input):
             logger.info("Running job on %s" % (j['node']))
 
             if j['command'] == 'ping':
-                ret = json.loads(remote.script(j['node'], 'ping.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
+                scripts = ' '.join(['ping.py', j['parameters']['arg'], j['parameters']['dst']])
+                ret = json.loads(remote.script(j['node'], scripts))
+                #ret = json.loads(remote.script(j['node'],  'ping.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
             elif j['command'] == 'traceroute':
                 ret = json.loads(remote.script(j['node'], 'traceroute.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
             elif j['command'] == 'iperf':
-                ret = json.loads(remote.script(j['node'], 'iperf.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
+                # server
+                remote.script(j['node'], 'iperf.py' + ' ' + '-s')
+                # client
+                ret = json.loads(remote.script(j['dst'], 'iperf.py' + ' ' + '-c' + j['node'] +' ' +j['parameters']['arg']))
             else :
                 ret = False
 
