@@ -20,6 +20,9 @@ import myops2.lib.remote as remote
 
 import threading
 
+def func(q, *param):
+    q.put(remote.script(*param))
+
 def process_job(num, input):
     """
     This worker will try to check for resource availability
@@ -60,18 +63,18 @@ def process_job(num, input):
             }
             #TODO - put the below code in the right place
             '''
-        # preventing second command execution
-        black_list = ['&&', '&', ';', '||']
-        if any(black in j['parameters']['arg'] for black in black_list):
-            logger.info("Hacking argument detected : (%s)" % (j['parameters']['arg']))
-            upd = {
-                'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                'jobstatus': 'finished',
-                'message': 'Hack argument detected : %s ' % j['parameters']['arg'],
-                'returnstatus': 1,
-                'stdout': '',
-                'stderr': ''
-            }
+            # preventing second command execution
+            black_list = ['&&', '&', ';', '||']
+            if any(black in j['parameters']['arg'] for black in black_list):
+                logger.info("Hacking argument detected : (%s)" % (j['parameters']['arg']))
+                upd = {
+                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    'jobstatus': 'finished',
+                    'message': 'Hack argument detected : %s ' % j['parameters']['arg'],
+                    'returnstatus': 1,
+                    'stdout': '',
+                    'stderr': ''
+                }
             '''
         else :
             logger.info("Running job on %s" % (j['node']))
@@ -79,39 +82,34 @@ def process_job(num, input):
             if j['command'] == 'ping':
                 scripts = ' '.join(['ping.py', j['parameters']['arg'], j['parameters']['dst']])
                 ret = json.loads(remote.script(j['node'], scripts))
-                #ret = json.loads(remote.script(j['node'],  'ping.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
             elif j['command'] == 'traceroute':
                 ret = json.loads(remote.script(j['node'], 'traceroute.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
             elif j['command'] == 'iperf':
-                # server
-                ret = []
-                def func(q, *param):
-                    q.put(remote.script(*param))
-                
+                result = remote.setup(j['parameters']['dst'])
                 q = Queue.Queue()
+                # server
                 ts = threading.Thread(target = func, args=(q, j['node'], 'iperf.py' + ' ' + '-s'))
-                tc = threading.Thread(target = func, args=(q, j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node']))
+                # client
+                tc = threading.Thread(target = func, args=(q, j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node'] + ' ' + j['parameters']['arg']))
                 ts.start()
                 logger.info("Running job on %s" % (j['node']))
-                #time.sleep(5)
+                time.sleep(0.5)
                 tc.start()
                 logger.info("Running job on %s" % (j['parameters']['dst']))
                 tc.join()
                 ts.join()
-                 
-                for i in range(2):
-                    ret += [q.get()]
-                     
-                print(ret)
+                
+                ret = { 
+                    'returnstatus': '',
+                    'stdout': '',
+                    'stderr': ''
+                }
+                #client_result
+                for key, value in json.loads(q.get()).items():
+                    ret[key] += 'client: ' + str(value) + '\n'
+                for key, value in json.loads(q.get()).items():
+                    ret[key] += 'server: ' + str(value) + '\n'
 
-                # server = remote.script(j['node'], 'iperf.py' + ' ' + '-s')
-                # print(server)
-                # #print(j['parameters']['dst'])
-                # client = remote.script(j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node'] + ' ' +j['parameters']['arg'])
-                # print(client)
-                # # client
-                # #ret = json.loads(client)
-                # logger.info("result is %s ..."% ret)
             else :
                 ret = False
 
