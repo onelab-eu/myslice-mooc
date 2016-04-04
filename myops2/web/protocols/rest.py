@@ -68,8 +68,8 @@ class Resources(cors.CorsMixin, web.RequestHandler):
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
             resources.append(item)
-	
-	connection.close()
+
+        connection.close()
 
         #self.finish()
         #id = self.get_argument("id")
@@ -91,6 +91,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
     def set_default_headers(self):
         # to allow CORS
         self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Content-Type", "application/json")
 
     @gen.coroutine
     def get(self, *args):
@@ -103,9 +104,8 @@ class Job(cors.CorsMixin, web.RequestHandler):
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
             jobs.append(item)
-	
-        connection.close()
 
+        connection.close()
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
 
@@ -129,7 +129,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
             data["stderr"]          = ""
 
             json.dumps(data)
-
+         
 
         connection = yield connect()
 
@@ -142,6 +142,6 @@ class Job(cors.CorsMixin, web.RequestHandler):
         for key in rows['generated_keys']:
             ids.append(key)
 
-	connection.close()
+        connection.close()
 
         self.write(json.dumps({"id": ids}))

@@ -10,12 +10,15 @@ import logging
 import time
 import json
 from datetime import datetime
+import Queue
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 
 from myops2.settings import Config
 import myops2.lib.remote as remote
+
+import threading
 
 def process_job(num, input):
     """
@@ -81,9 +84,34 @@ def process_job(num, input):
                 ret = json.loads(remote.script(j['node'], 'traceroute.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
             elif j['command'] == 'iperf':
                 # server
-                remote.script(j['node'], 'iperf.py' + ' ' + '-s')
-                # client
-                ret = json.loads(remote.script(j['dst'], 'iperf.py' + ' ' + '-c' + j['node'] +' ' +j['parameters']['arg']))
+                ret = []
+                def func(q, *param):
+                    q.put(remote.script(*param))
+                
+                q = Queue.Queue()
+                ts = threading.Thread(target = func, args=(q, j['node'], 'iperf.py' + ' ' + '-s'))
+                tc = threading.Thread(target = func, args=(q, j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node']))
+                ts.start()
+                logger.info("Running job on %s" % (j['node']))
+                #time.sleep(5)
+                tc.start()
+                logger.info("Running job on %s" % (j['parameters']['dst']))
+                tc.join()
+                ts.join()
+                 
+                for i in range(2):
+                    ret += [q.get()]
+                     
+                print(ret)
+
+                # server = remote.script(j['node'], 'iperf.py' + ' ' + '-s')
+                # print(server)
+                # #print(j['parameters']['dst'])
+                # client = remote.script(j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node'] + ' ' +j['parameters']['arg'])
+                # print(client)
+                # # client
+                # #ret = json.loads(client)
+                # logger.info("result is %s ..."% ret)
             else :
                 ret = False
 

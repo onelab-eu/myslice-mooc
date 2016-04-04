@@ -13,7 +13,7 @@ import subprocess
 import threading
 import Queue
 
-def run_command_with_timeout(cmd, timeout_sec=30):
+def run_command_with_timeout(cmd, timeout_sec=20):
     """Execute `cmd` in a subprocess and enforce timeout `timeout_sec` seconds.
     Return subprocess exit code on natural completion of the subprocess.
     Raise an exception if timeout expires before subprocess completes."""
@@ -36,7 +36,7 @@ def run_command_with_timeout(cmd, timeout_sec=30):
         try:
             proc.kill()
         except OSError, e:
-            return proc.returncode
+            return proc.returncode, 'fail to terminate the subprocess', 'os err'
         #raise TimeoutError('Process #%d killed after %f seconds' % (proc.pid, timeout_sec))
     
     out, err = q.get()
@@ -52,36 +52,39 @@ def run_command(cmd):
     return proc.returncode, out, err
 
 if __name__ == '__main__':
-
     # find the iperf package
     is_iperf = run_command(['which', 'iperf'])
 
     if not is_iperf[1]:
-
-        if platform.dist()[1] > '22':
-            commands = ['dnf', 'install', 'iperf']
+        
+        if platform.architecture()[0] == '64bit':
+            commands = ['rpm', '-ivh', 'https://iperf.fr/download/fedora/iperf-2.0.8-2.fc23.x86_64.rpm']
         else:
-            commands = ['yum', 'install', 'iperf']
+            commands = ['rpm', '-ivh', 'https://iperf.fr/download/fedora/iperf-2.0.5-13.fc21.i686.rpm']
+        
+        install_code, out, err = run_command(commands)
 
-        installation = run_command(commands)
+        if err: 
+            install_code, out, err = run_command(['yum', 'install', 'iperf'])
 
-        if not installation[1]:
+        if err:
             print json.dumps({
-                'returnstatus': installation[0],
-                'stdout': installation[1],
-                'stderr': installation[2]
-                })
-            sys.exit(1)
+                'returnstatus': install_code,
+                'stdout': out,
+                'stderr': err
+            })
 
-    aguments = sys.argv
-
-    # check if is server
-    running_type = aguments[1]
+    is_iperf = run_command(['which', 'iperf'])
+    
+    agruments = sys.argv
+    running_type = agruments[1]
+    
     if running_type == '-s':
-        iperf = run_command_with_timeout(['iperf'] + aguments[1:])
-    else:
-        iperf = run_command(['iperf'] + aguments[1:])
-    print(iperf)
+        iperf = run_command_with_timeout(['iperf'] + agruments[1:])
+    elif running_type == '-c':
+        #print('runnning client')
+        iperf = run_command(['iperf'] + agruments[1:])
+
     print json.dumps({
         'returnstatus': iperf[0],
         'stdout': iperf[1],
