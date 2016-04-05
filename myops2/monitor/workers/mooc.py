@@ -106,9 +106,9 @@ def process_job(num, input):
                 }
                 #client_result
                 for key, value in json.loads(q.get()).items():
-                    ret[key] += 'client: ' + str(value) + '\n'
+                    ret[key] += 'client: \n' + str(value) + '\n'
                 for key, value in json.loads(q.get()).items():
-                    ret[key] += 'server: ' + str(value) + '\n'
+                    ret[key] += 'server: \n' + str(value) + '\n'
 
             else :
                 ret = False
