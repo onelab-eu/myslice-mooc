@@ -15,10 +15,10 @@
 . /lib/lsb/init-functions
 
 DIR=/root/mooc/rest-api/myops2/bin
-DAEMON=$DIR/myops2-mooc.py
+DAEMON=$DIR/myops2-mooc
 DAEMON_NAME=mooc
 
-DAEMONW=$DIR/myops2-web.py
+DAEMONW=$DIR/myops2-web
 DAEMONW_NAME=moocweb
 
 # Add any command line options for your daemon here
