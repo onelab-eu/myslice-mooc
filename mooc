@@ -12,6 +12,8 @@
 # Description:       needs rethinkdb
 ### END INIT INFO
 
+. /lib/lsb/init-functions
+
 DIR=/root/mooc/rest-api/myops2/bin
 DAEMON=$DIR/myops2-mooc.py
 DAEMON_NAME=mooc
