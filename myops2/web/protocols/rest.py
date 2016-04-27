@@ -99,11 +99,17 @@ class Job(cors.CorsMixin, web.RequestHandler):
 
         connection = yield connect()
 
-        cursor = yield r.table('jobs').run(connection)
+        try:
+            id = self.get_argument("id")
+        except Exception:
+            cursor = yield r.table('jobs').run(connection)
 
-        while (yield cursor.fetch_next()):
-            item = yield cursor.next()
-            jobs.append(item)
+            while (yield cursor.fetch_next()):
+                item = yield cursor.next()
+                jobs.append(item)
+        else:
+            ret = yield r.table('jobs').get(id).run(connection)
+            jobs.append(ret)
 
         connection.close()
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
