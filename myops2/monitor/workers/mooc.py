@@ -44,7 +44,7 @@ def process_job(num, input):
 
         j = r.table('jobs').get(job).run(c)
 
-        logger.debug("Job: %s" % (j,))
+        logger.info("Job: %s" % (j,))
 
         r.table('jobs').get(job).update({
             'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
