@@ -122,7 +122,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
         #jobs = tornado.escape.json_decode(self.request.body)
         jobs = json.loads(self.request.body)
 
-        logger.debug("Received %s" % (jobs,))
+        logger.info("Received %s" % (jobs,))
 
         ts = time.time()
         # Adding additional info to the json
