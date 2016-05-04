@@ -20,8 +20,8 @@ import myops2.lib.remote as remote
 
 import threading
 
-def func(q, *param):
-    q.put(remote.script(*param))
+def remote_worker(*param):
+    remote.script(*param)
 
 def process_job(num, input):
     """
@@ -43,6 +43,8 @@ def process_job(num, input):
         logger.info("Agent %s processing job %s" % (num, job))
 
         j = r.table('jobs').get(job).run(c)
+
+        logger.debug("Job: %s" % (j,))
 
         r.table('jobs').get(job).update({
             'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
@@ -77,38 +79,49 @@ def process_job(num, input):
                 }
             '''
         else :
-            logger.info("Running job on %s" % (j['node']))
 
             if j['command'] == 'ping':
-                scripts = ' '.join(['ping.py', j['parameters']['arg'], j['parameters']['dst']])
-                ret = json.loads(remote.script(j['node'], scripts))
+                command = 'ping'
+
+                remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
+
+                logger.info("Running job (%s) on %s" % (remote_command, j['node']))
+
+                ret = json.loads(remote.script(j['node'], remote_command))
+
             elif j['command'] == 'traceroute':
-                ret = json.loads(remote.script(j['node'], 'traceroute.py' + ' ' + j['parameters']['arg'] + ' ' + j['parameters']['dst']))
+                command = 'traceroute'
+
+                remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
+
+                logger.info("Running job (%s) on %s" % (remote_command, j['node']))
+
+                ret = json.loads(remote.script(j['node'], remote_command))
+
             elif j['command'] == 'iperf':
+
+                ##
+                # setup second node
                 result = remote.setup(j['parameters']['dst'])
-                q = Queue.Queue()
-                # server
-                ts = threading.Thread(target = func, args=(q, j['node'], 'iperf.py' + ' ' + '-s'))
-                # client
-                tc = threading.Thread(target = func, args=(q, j['parameters']['dst'], 'iperf.py' + ' ' + '-c' + ' ' + j['node'] + ' ' + j['parameters']['arg']))
+
+                #q = Queue.Queue()
+
+                # server (thread)
+                remote_command_server = "iperf.py -s"
+                ts = threading.Thread(target=remote_worker, args=(j['node'], remote_command_server))
                 ts.start()
-                logger.info("Running job on %s" % (j['node']))
+                logger.info("Running job '%s' on %s" % (remote_command_server, j['node']))
+
                 time.sleep(0.5)
-                tc.start()
-                logger.info("Running job on %s" % (j['parameters']['dst']))
-                tc.join()
+
+                # client
+                remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
+                logger.info("Running job '%s' on %s" % (remote_command_client, j['parameters']['dst']))
+
+                ret = json.loads(remote.script(j['parameters']['dst'], remote_command_client))
+
+                # wait for the thread to finish
                 ts.join()
-                
-                ret = { 
-                    'returnstatus': '',
-                    'stdout': '',
-                    'stderr': ''
-                }
-                #client_result
-                for key, value in json.loads(q.get()).items():
-                    ret[key] += 'client: \n' + str(value) + '\n'
-                for key, value in json.loads(q.get()).items():
-                    ret[key] += 'server: \n' + str(value) + '\n'
 
             else :
                 ret = False
@@ -122,7 +135,7 @@ def process_job(num, input):
                     'stdout': ret['stdout'],
                     'stderr': ret['stderr']
                 }
-                logger.info("Command executed on %s" % (j['node']))
+                logger.info("Command executed, result: %s" % (upd))
             else:
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
