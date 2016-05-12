@@ -136,7 +136,7 @@ def process_job(num, input):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    cmd_ret = remote_worker(j['node'], remote_command)
+                    cmd_ret = remote_worker((j['node'], remote_command))
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     ret = False
@@ -152,7 +152,7 @@ def process_job(num, input):
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
-                cmd_ret = remote_worker(j['node'], remote_command)
+                cmd_ret = remote_worker((j['node'], remote_command))
 
                 ret = json.loads(cmd_ret)
 
@@ -178,7 +178,7 @@ def process_job(num, input):
 
                     # client
                     remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
-                    ret = json.loads(remote_worker(j['parameters']['dst'], remote_command_client))
+                    ret = json.loads(remote_worker((j['parameters']['dst'], remote_command_client)))
 
                     # wait for the thread to finish
                     ts.join()
