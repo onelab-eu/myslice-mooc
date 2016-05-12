@@ -25,13 +25,13 @@ import errno
 
 logger = logging.getLogger(__name__)
 
+def handle_timeout(signum, frame):
+    raise TimeoutError(os.strerror(errno.ETIME))
+
 signal.signal(signal.SIGALRM, handle_timeout)
 
 class TimeoutError(Exception):
     pass
-
-def handle_timeout(signum, frame):
-    raise TimeoutError(os.strerror(errno.ETIME))
 
 def remote_worker(*param):
     # timeout after 15 min
