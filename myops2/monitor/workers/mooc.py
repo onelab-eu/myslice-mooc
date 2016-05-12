@@ -29,18 +29,31 @@ class TimeoutError(Exception):
 def handle_timeout(signum, frame):
     raise TimeoutError(os.strerror(errno.ETIME))
 
-signal.signal(signal.SIGALRM, handle_timeout)
-
 def remote_worker(*param):
-    # timout after 15 min
-    signal.alarm(900)
+    # timeout after 15 min
+    signal.signal(signal.SIGALRM, handle_timeout)
+    signal.alarm(30)
 
     try:
         result = remote.script(*param)
+    except TimeoutError:
+        return {
+            'jobstatus': 'error',
+            'message': 'job timeout',
+            'returnstatus': 1,
+            'stdout': '',
+            'stderr': ''
+        }
     finally:
         signal.alarm(0)
 
-    return result
+    return {
+        'jobstatus': 'finished',
+        'message': 'job completed',
+        'returnstatus': result['returnstatus'],
+        'stdout': result['stdout'],
+        'stderr': result['stderr']
+    }
 
 
 
@@ -73,14 +86,12 @@ def process_job(num, input):
             'message': 'executing job'
         }).run(c)
 
-        error_msg = 'job error'
-
         result = remote.setup(j['node'])
         if not result['status'] :
             logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
             upd = {
                 'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                'jobstatus': 'finished',
+                'jobstatus': 'error',
                 'message': 'node not reachable',
                 'returnstatus': 1,
                 'stdout': '',
@@ -110,11 +121,7 @@ def process_job(num, input):
 
                 logger.info("Running job (%s) on %s" % (remote_command, j['node']))
 
-                try:
-                    ret = json.loads(remote_worker(j['node'], remote_command))
-                except TimeoutError:
-                    ret = False
-                    error_msg = 'job timeout'
+                ret = json.loads(remote_worker(j['node'], remote_command))
 
             elif j['command'] == 'traceroute':
                 command = 'traceroute'
@@ -123,11 +130,7 @@ def process_job(num, input):
 
                 logger.info("Running job (%s) on %s" % (remote_command, j['node']))
 
-                try:
-                    ret = json.loads(remote_worker(j['node'], remote_command))
-                except TimeoutError:
-                    ret = False
-                    error_msg = 'job timeout'
+                ret = json.loads(remote_worker(j['node'], remote_command))
 
             elif j['command'] == 'iperf':
 
@@ -154,11 +157,7 @@ def process_job(num, input):
                     remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
                     logger.info("Running job '%s' on %s" % (remote_command_client, j['parameters']['dst']))
 
-                    try:
-                        ret = json.loads(remote_worker(j['parameters']['dst'], remote_command_client))
-                    except TimeoutError:
-                        ret = False
-                        error_msg = 'job timeout'
+                    ret = json.loads(remote_worker(j['parameters']['dst'], remote_command_client))
 
                     # wait for the thread to finish
                     ts.join()
@@ -169,8 +168,8 @@ def process_job(num, input):
             if ret:
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                    'jobstatus': 'finished',
-                    'message': 'job completed',
+                    'jobstatus': ret['jobstatus'],
+                    'message': ret['message'],
                     'returnstatus': ret['returnstatus'],
                     'stdout': ret['stdout'],
                     'stderr': ret['stderr']
@@ -179,8 +178,8 @@ def process_job(num, input):
             else:
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                    'jobstatus': 'finished',
-                    'message': error_msg,
+                    'jobstatus': 'error',
+                    'message': 'job error',
                     'returnstatus': 1,
                     'stdout': '',
                     'stderr': 'unknown command'
