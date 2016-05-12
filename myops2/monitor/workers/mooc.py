@@ -69,7 +69,7 @@ def remote_worker(*param):
         }
     finally:
         signal.alarm(0)
-        
+
     return ret
 
 
@@ -134,18 +134,22 @@ def process_job(num, input):
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
-                logger.info("Running job (%s) on %s" % (remote_command, j['node']))
+                cmd_ret = remote_worker(j['node'], remote_command)
 
-                ret = json.loads(remote_worker(j['node'], remote_command))
+                try:
+                    ret = json.loads(cmd_ret)
+                except Exception, msg:
+                    logger.error("JSON error: " %(msg,))
+                    ret = False
 
             elif j['command'] == 'traceroute':
                 command = 'traceroute'
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
-                logger.info("Running job (%s) on %s" % (remote_command, j['node']))
+                cmd_ret = remote_worker(j['node'], remote_command)
 
-                ret = json.loads(remote_worker(j['node'], remote_command))
+                ret = json.loads(cmd_ret)
 
             elif j['command'] == 'iperf':
 
@@ -155,7 +159,7 @@ def process_job(num, input):
 
                 if not result_dst['status']:
 
-                    logger.info("%s : Failed SSH access (%s)" % (j['parameters']['dst'], result_dst['message']))
+                    logger.error("%s : Failed SSH access (%s)" % (j['parameters']['dst'], result_dst['message']))
                     ret = False
 
                 else:
