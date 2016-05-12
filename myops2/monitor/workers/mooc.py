@@ -49,6 +49,15 @@ def remote_worker(*param):
             'stdout': '',
             'stderr': ''
         }
+    except Exception, msg:
+        logger.info("job '%s' exception on %s ($s)" % (param[1], param[0], msg))
+        return {
+            'jobstatus': 'error',
+            'message': msg,
+            'returnstatus': 1,
+            'stdout': '',
+            'stderr': ''
+        }
     else:
         logger.info("job '%s' completed on %s" % (param[1], param[0]))
     finally:
