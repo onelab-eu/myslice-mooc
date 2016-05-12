@@ -19,9 +19,30 @@ from myops2.settings import Config
 import myops2.lib.remote as remote
 
 import threading
+import signal
+import os
+import errno
+
+class TimeoutError(Exception):
+    pass
+
+def handle_timeout(signum, frame):
+    raise TimeoutError(os.strerror(errno.ETIME))
+
+signal.signal(signal.SIGALRM, handle_timeout)
 
 def remote_worker(*param):
-    remote.script(*param)
+    # timout after 15 min
+    signal.alarm(900)
+
+    try:
+        result = remote.script(*param)
+    finally:
+        signal.alarm(0)
+
+    return result
+
+
 
 def process_job(num, input):
     """
@@ -51,6 +72,8 @@ def process_job(num, input):
             'jobstatus': 'running',
             'message': 'executing job'
         }).run(c)
+
+        error_msg = 'job error'
 
         result = remote.setup(j['node'])
         if not result['status'] :
@@ -87,7 +110,11 @@ def process_job(num, input):
 
                 logger.info("Running job (%s) on %s" % (remote_command, j['node']))
 
-                ret = json.loads(remote.script(j['node'], remote_command))
+                try:
+                    ret = json.loads(remote_worker(j['node'], remote_command))
+                except TimeoutError:
+                    ret = False
+                    error_msg = 'job timeout'
 
             elif j['command'] == 'traceroute':
                 command = 'traceroute'
@@ -96,32 +123,45 @@ def process_job(num, input):
 
                 logger.info("Running job (%s) on %s" % (remote_command, j['node']))
 
-                ret = json.loads(remote.script(j['node'], remote_command))
+                try:
+                    ret = json.loads(remote_worker(j['node'], remote_command))
+                except TimeoutError:
+                    ret = False
+                    error_msg = 'job timeout'
 
             elif j['command'] == 'iperf':
 
                 ##
                 # setup second node
-                result = remote.setup(j['parameters']['dst'])
+                result_dst = remote.setup(j['parameters']['dst'])
 
-                #q = Queue.Queue()
+                if not result_dst['status']:
 
-                # server (thread)
-                remote_command_server = "iperf.py -s"
-                ts = threading.Thread(target=remote_worker, args=(j['node'], remote_command_server))
-                ts.start()
-                logger.info("Running job '%s' on %s" % (remote_command_server, j['node']))
+                    logger.info("%s : Failed SSH access (%s)" % (j['parameters']['dst'], result_dst['message']))
+                    ret = False
 
-                time.sleep(0.5)
+                else:
 
-                # client
-                remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
-                logger.info("Running job '%s' on %s" % (remote_command_client, j['parameters']['dst']))
+                    # server (thread)
+                    remote_command_server = "iperf.py -s"
+                    ts = threading.Thread(target=remote_worker, args=(j['node'], remote_command_server))
+                    ts.start()
+                    logger.info("Running job '%s' on %s" % (remote_command_server, j['node']))
 
-                ret = json.loads(remote.script(j['parameters']['dst'], remote_command_client))
+                    time.sleep(2)
 
-                # wait for the thread to finish
-                ts.join()
+                    # client
+                    remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
+                    logger.info("Running job '%s' on %s" % (remote_command_client, j['parameters']['dst']))
+
+                    try:
+                        ret = json.loads(remote_worker(j['parameters']['dst'], remote_command_client))
+                    except TimeoutError:
+                        ret = False
+                        error_msg = 'job timeout'
+
+                    # wait for the thread to finish
+                    ts.join()
 
             else :
                 ret = False
@@ -140,7 +180,7 @@ def process_job(num, input):
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
                     'jobstatus': 'finished',
-                    'message': 'job error',
+                    'message': error_msg,
                     'returnstatus': 1,
                     'stdout': '',
                     'stderr': 'unknown command'
