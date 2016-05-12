@@ -61,13 +61,25 @@ def remote_worker(hostname, script):
         }
     else:
         logger.info("job '%s' completed on %s" % (script, hostname))
-        ret = {
-            'jobstatus': 'finished',
-            'message': 'job completed',
-            'returnstatus': result['returnstatus'],
-            'stdout': result['stdout'],
-            'stderr': result['stderr']
-        }
+        try:
+            r = json.loads(result)
+        except Exception, msg:
+            logger.error("JSON error: %s" % (msg,))
+            ret = {
+                'jobstatus': 'error',
+                'message': 'job error',
+                'returnstatus': 1,
+                'stdout': '',
+                'stderr': ''
+            }
+        else:
+            ret = {
+                'jobstatus': 'finished',
+                'message': 'job completed',
+                'returnstatus': r['returnstatus'],
+                'stdout': r['stdout'],
+                'stderr': r['stderr']
+            }
     finally:
         signal.alarm(0)
 
@@ -141,20 +153,12 @@ def process_job(num, input):
                     logger.error("EXEC error: %s" % (msg,))
                     ret = False
 
-                try:
-                    ret = json.loads(cmd_ret)
-                except Exception, msg:
-                    logger.error("JSON error: %s" %(msg,))
-                    ret = False
-
             elif j['command'] == 'traceroute':
                 command = 'traceroute'
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 cmd_ret = remote_worker(j['node'], remote_command)
-
-                ret = json.loads(cmd_ret)
 
             elif j['command'] == 'iperf':
 
@@ -178,7 +182,7 @@ def process_job(num, input):
 
                     # client
                     remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
-                    ret = json.loads(remote_worker((j['parameters']['dst'], remote_command_client)))
+                    ret = remote_worker((j['parameters']['dst'], remote_command_client))
 
                     # wait for the thread to finish
                     ts.join()
