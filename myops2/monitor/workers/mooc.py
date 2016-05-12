@@ -34,9 +34,13 @@ def remote_worker(*param):
     signal.signal(signal.SIGALRM, handle_timeout)
     signal.alarm(30)
 
+    logger = logging.getLogger(__name__)
+    logger.info("Running job '%s' on %s" % (param[1], param[0]))
+
     try:
         result = remote.script(*param)
     except TimeoutError:
+        logger.info("job '%s' timeout on %s" % (param[1], param[0]))
         return {
             'jobstatus': 'error',
             'message': 'job timeout',
@@ -44,6 +48,8 @@ def remote_worker(*param):
             'stdout': '',
             'stderr': ''
         }
+    else:
+        logger.info("job '%s' completed on %s" % (param[1], param[0]))
     finally:
         signal.alarm(0)
 
@@ -149,14 +155,11 @@ def process_job(num, input):
                     remote_command_server = "iperf.py -s"
                     ts = threading.Thread(target=remote_worker, args=(j['node'], remote_command_server))
                     ts.start()
-                    logger.info("Running job '%s' on %s" % (remote_command_server, j['node']))
 
                     time.sleep(2)
 
                     # client
                     remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
-                    logger.info("Running job '%s' on %s" % (remote_command_client, j['parameters']['dst']))
-
                     ret = json.loads(remote_worker(j['parameters']['dst'], remote_command_client))
 
                     # wait for the thread to finish
