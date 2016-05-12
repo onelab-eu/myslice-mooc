@@ -33,16 +33,16 @@ signal.signal(signal.SIGALRM, handle_timeout)
 class TimeoutError(Exception):
     pass
 
-def remote_worker(*param):
+def remote_worker(hostname, script):
     # timeout after 15 min
     signal.alarm(30)
 
-    logger.info("Running job '%s' on %s" % (param[1], param[0]))
+    logger.info("Running job '%s' on %s" % (script, hostname))
 
     try:
-        result = remote.script(*param)
+        result = remote.script(hostname, script)
     except TimeoutError:
-        logger.info("job '%s' timeout on %s" % (param[1], param[0]))
+        logger.info("job '%s' timeout on %s" % (script, hostname))
         ret = {
             'jobstatus': 'error',
             'message': 'job timeout',
@@ -51,7 +51,7 @@ def remote_worker(*param):
             'stderr': ''
         }
     except Exception, msg:
-        logger.info("job '%s' exception on %s ($s)" % (param[1], param[0], msg))
+        logger.info("job '%s' exception on %s ($s)" % (script, hostname, msg))
         ret = {
             'jobstatus': 'error',
             'message': msg,
@@ -60,7 +60,7 @@ def remote_worker(*param):
             'stderr': ''
         }
     else:
-        logger.info("job '%s' completed on %s" % (param[1], param[0]))
+        logger.info("job '%s' completed on %s" % (script, hostname))
         ret = {
             'jobstatus': 'finished',
             'message': 'job completed',
