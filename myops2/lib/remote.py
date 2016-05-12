@@ -23,12 +23,14 @@ local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 def setup(hostname):
 
     result = { "status" : False, "message" : None }
+    logger.info("connecting to %s", (hostname,))
 
     try:
         pkey = paramiko.RSAKey.from_private_key_file(rsa_private_key)
     except Exception as e:
         #print 'Failed loading' % (rsa_private_key, e)
-        result["message"] = 'Failed loading' % (rsa_private_key, e)
+        result["message"] = 'Failed loading key'
+        logger.error('Failed loading key')
         return result
 
     try:
@@ -36,9 +38,11 @@ def setup(hostname):
     except SSHException as e:
         # Transport setup error
         result['message'] = 'Failed SSH connection (%s)' % (e)
+        logger.error('Failed SSH connection (%s)' % (e))
         return result
     except Exception as e:
         result['message'] = 'Transport error (%s)' % (e)
+        logger.error('Transport error (%s)' % (e))
         return result
 
     try:
@@ -46,6 +50,7 @@ def setup(hostname):
     except SSHException as e:
         # if negotiation fails (and no event was passed in)
         result['message'] = 'Failed SSH negotiation (%s)' % (e)
+        logger.error('Failed SSH negotiation (%s)' % (e))
         return result
 
     try:
@@ -53,14 +58,17 @@ def setup(hostname):
     except BadAuthenticationType as e:
         # if public-key authentication isn't allowed by the server for this user (and no event was passed in)
         result['message'] = 'Failed public-key authentication (%s)' % (e)
+        logger.error('Failed public-key authentication (%s)' % (e))
         return result
     except AuthenticationException as e:
         # if the authentication failed (and no event was passed in)
         result['message'] = 'Failed authentication (%s)' % (e)
+        logger.error('Failed authentication (%s)' % (e))
         return result
     except SSHException as e:
         # if there was a network error
         result['message'] = 'Network error (%s)' % (e)
+        logger.error('Network error (%s)' % (e))
         return result
 
 
@@ -97,6 +105,7 @@ def setup(hostname):
 
     result['status'] = True
     result['message'] = 'Setup complete'
+    logger.info('Setup complete')
     return result
 
 def connect(hostname):
