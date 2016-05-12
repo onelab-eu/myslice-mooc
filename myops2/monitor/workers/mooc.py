@@ -25,6 +25,8 @@ import errno
 
 logger = logging.getLogger(__name__)
 
+signal.signal(signal.SIGALRM, handle_timeout)
+
 class TimeoutError(Exception):
     pass
 
@@ -33,7 +35,6 @@ def handle_timeout(signum, frame):
 
 def remote_worker(*param):
     # timeout after 15 min
-    signal.signal(signal.SIGALRM, handle_timeout)
     signal.alarm(30)
 
     logger.info("Running job '%s' on %s" % (param[1], param[0]))
@@ -134,7 +135,11 @@ def process_job(num, input):
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
-                cmd_ret = remote_worker(j['node'], remote_command)
+                try:
+                    cmd_ret = remote_worker(j['node'], remote_command)
+                except Exception, msg:
+                    logger.error("EXEC error: " % (msg,))
+                    ret = False
 
                 try:
                     ret = json.loads(cmd_ret)
