@@ -148,7 +148,7 @@ def process_job(num, input):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    cmd_ret = remote_worker(j['node'], remote_command)
+                    ret = remote_worker(j['node'], remote_command)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     ret = False
@@ -158,7 +158,11 @@ def process_job(num, input):
 
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
-                cmd_ret = remote_worker(j['node'], remote_command)
+                try:
+                    ret = remote_worker(j['node'], remote_command)
+                except Exception, msg:
+                    logger.error("EXEC error: %s" % (msg,))
+                    ret = False
 
             elif j['command'] == 'iperf':
 
