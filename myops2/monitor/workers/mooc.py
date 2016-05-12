@@ -23,6 +23,8 @@ import signal
 import os
 import errno
 
+logger = logging.getLogger(__name__)
+
 class TimeoutError(Exception):
     pass
 
@@ -34,7 +36,6 @@ def remote_worker(*param):
     signal.signal(signal.SIGALRM, handle_timeout)
     signal.alarm(30)
 
-    logger = logging.getLogger(__name__)
     logger.info("Running job '%s' on %s" % (param[1], param[0]))
 
     try:
@@ -68,7 +69,6 @@ def process_job(num, input):
     This worker will try to check for resource availability
 
     """
-    logger = logging.getLogger(__name__)
 
     logger.info("Agent %s starting" % num)
 

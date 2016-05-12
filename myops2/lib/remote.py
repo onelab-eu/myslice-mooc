@@ -3,8 +3,16 @@ import select
 import os
 import glob
 import hashlib
+import logging
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
+
+# logging.basicConfig(level=logging.INFO,
+#                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+#                     datefmt="%Y-%m-%d %H:%M:%S",
+#                     filename="/var/log/myops2-mooc.log", filemode="a")
+
+logger = logging.getLogger(__name__)
 
 # static atm
 username = 'root'
@@ -98,18 +106,19 @@ def connect(hostname):
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+    logger.info("connecting to %s", (hostname,))
     try:
         ssh.connect(hostname=hostname, username="root", key_filename=rsa_private_key)
     except BadHostKeyException as e:
-        print e
+        logger.error(e)
     except AuthenticationException as e:
-        print e
+        logger.error(e)
     except SSHException as e:
-        print e
+        logger.error(e)
     except socket.error as e:
-        print e
+        logger.error(e)
     except IOError as e:
-        print e
+        logger.error(e)
 
     return ssh
 
@@ -120,20 +129,23 @@ def execute(hostname, command):
     ssh = connect(hostname)
 
     # Send the command (non-blocking)
+    logger.info("executing %s", (command,))
     stdin, stdout, stderr = ssh.exec_command(command)
 
     # Wait for the command to terminate
-    while not stdout.channel.exit_status_ready():
-        # Only print data if there is data to read in the channel
-        if stdout.channel.recv_ready():
-            rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
-            if len(rl) > 0:
-                # Print data from stdout
-                result += stdout.channel.recv(1024)
+    # while not stdout.channel.exit_status_ready():
+    #     # Only print data if there is data to read in the channel
+    #     if stdout.channel.recv_ready():
+    #         rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+    #         if len(rl) > 0:
+    #             # Print data from stdout
+    #             result += stdout.channel.recv(1024)
+
+    output = stdout.read()
 
     ssh.close()
 
-    return result.strip()
+    return output
 
 def script(hostname, script):
     '''
