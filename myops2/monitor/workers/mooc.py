@@ -138,13 +138,13 @@ def process_job(num, input):
                 try:
                     cmd_ret = remote_worker(j['node'], remote_command)
                 except Exception, msg:
-                    logger.error("EXEC error: " % (msg,))
+                    logger.error("EXEC error: %s" % (msg,))
                     ret = False
 
                 try:
                     ret = json.loads(cmd_ret)
                 except Exception, msg:
-                    logger.error("JSON error: " %(msg,))
+                    logger.error("JSON error: %s" %(msg,))
                     ret = False
 
             elif j['command'] == 'traceroute':
