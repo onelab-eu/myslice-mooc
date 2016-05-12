@@ -42,7 +42,7 @@ def remote_worker(*param):
         result = remote.script(*param)
     except TimeoutError:
         logger.info("job '%s' timeout on %s" % (param[1], param[0]))
-        return {
+        ret = {
             'jobstatus': 'error',
             'message': 'job timeout',
             'returnstatus': 1,
@@ -51,7 +51,7 @@ def remote_worker(*param):
         }
     except Exception, msg:
         logger.info("job '%s' exception on %s ($s)" % (param[1], param[0], msg))
-        return {
+        ret = {
             'jobstatus': 'error',
             'message': msg,
             'returnstatus': 1,
@@ -60,17 +60,17 @@ def remote_worker(*param):
         }
     else:
         logger.info("job '%s' completed on %s" % (param[1], param[0]))
+        ret = {
+            'jobstatus': 'finished',
+            'message': 'job completed',
+            'returnstatus': result['returnstatus'],
+            'stdout': result['stdout'],
+            'stderr': result['stderr']
+        }
     finally:
         signal.alarm(0)
-
-    return {
-        'jobstatus': 'finished',
-        'message': 'job completed',
-        'returnstatus': result['returnstatus'],
-        'stdout': result['stdout'],
-        'stderr': result['stderr']
-    }
-
+        
+    return ret
 
 
 def process_job(num, input):
