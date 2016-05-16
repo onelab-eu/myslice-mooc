@@ -35,7 +35,7 @@ class TimeoutError(Exception):
 
 def remote_worker(hostname, script):
     # timeout after 15 min
-    signal.alarm(30)
+    signal.alarm(900)
 
     logger.info("Running job '%s' on %s" % (script, hostname))
 
