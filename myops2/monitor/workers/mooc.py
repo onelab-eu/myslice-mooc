@@ -186,7 +186,12 @@ def process_job(num, input):
 
                     # client
                     remote_command_client = "iperf.py -c %s %s" % (j['node'], j['parameters']['arg'])
-                    ret = remote_worker((j['parameters']['dst'], remote_command_client))
+
+                    try:
+                        ret = remote_worker(j['parameters']['dst'], remote_command_client)
+                    except Exception, msg:
+                        logger.error("EXEC error: %s" % (msg,))
+                        ret = False
 
                     # wait for the thread to finish
                     ts.join()
