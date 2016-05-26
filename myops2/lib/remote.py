@@ -7,11 +7,6 @@ import logging
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
 
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S",
-                    filename="/var/log/myops2-mooc.log", filemode="a")
-
 logger = logging.getLogger(__name__)
 
 # static atm

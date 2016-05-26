@@ -57,7 +57,6 @@ def agent(num, input):
         '''
 
         result = r.setup(resource)
-        print result
         if not result['status'] :
             logger.info("%s : Failed SSH access (%s)" % (resource, result['message']))
         else :

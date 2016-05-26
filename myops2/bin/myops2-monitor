@@ -6,11 +6,8 @@
     (c) 2014 - 2015 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
 '''
 
-import sys
-import os
 import signal
 import time
-import datetime
 import logging
 import threading
 
