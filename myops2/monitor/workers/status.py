@@ -6,11 +6,7 @@ import myops2.lib.remote as r
 
 from planetlab.query import Query
 
-logger = logging.getLogger('myops2.worker.status')
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S",
-                    filename="myops2-monitor.log", filemode="a")
+logger = logging.getLogger(__name__)
 
 def agent(num, input):
     """
@@ -72,6 +68,4 @@ def agent(num, input):
             "state": node.boot_state,
             "access" : result
         })
-        
-	# ''' send OML stream '''
-        # oml.availability(node.hostname, availability)
+

@@ -27,7 +27,7 @@ from planetlab.query import Query
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
-                    filename="myops2-monitor.log", filemode="a")
+                    filename="/var/log/myops2-monitor.log", filemode="a")
 
 
 def receive_signal(signum, stack):
