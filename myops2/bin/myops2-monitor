@@ -29,6 +29,7 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt="%Y-%m-%d %H:%M:%S",
                     filename="/var/log/myops2-monitor.log", filemode="a")
 
+logger = logging.getLogger(__name__)
 
 def receive_signal(signum, stack):
     #logger = logging.getLogger("myops2.main")
@@ -89,8 +90,8 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, receive_signal)
     signal.signal(signal.SIGHUP, receive_signal)
 
-    logger = logging.getLogger("myops2.main")
-
+    logger.info('Starting Monitor service')
+    
     """
     Setup DB Store (Rethinkdb)
     """
