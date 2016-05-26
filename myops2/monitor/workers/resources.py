@@ -15,12 +15,6 @@ from planetlab.query import Query
 
 import myops2.lib.store as s
 
-logger = logging.getLogger('myops2.worker.resource')
-logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S",
-                    filename="myops2-monitor.log", filemode="a")
-
 '''
     resource discovery thread: will retrieve resources from a remote end
         - it will not remove old resources that were deleted/removed from remote end db

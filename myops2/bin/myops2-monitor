@@ -20,7 +20,7 @@ from myops2.settings import Config
 
 # workers
 from myops2.monitor.workers.status import agent
-from myops2.monitor.workers.resources import sync, queue
+#from myops2.monitor.workers.resources import sync, queue
 
 from planetlab.query import Query
 
