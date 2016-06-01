@@ -125,21 +125,7 @@ def process_job(num, input):
                 'stdout': '',
                 'stderr': result['message']
             }
-            #TODO - put the below code in the right place
-            '''
-            # preventing second command execution
-            black_list = ['&&', '&', ';', '||']
-            if any(black in j['parameters']['arg'] for black in black_list):
-                logger.info("Hacking argument detected : (%s)" % (j['parameters']['arg']))
-                upd = {
-                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                    'jobstatus': 'finished',
-                    'message': 'Hack argument detected : %s ' % j['parameters']['arg'],
-                    'returnstatus': 1,
-                    'stdout': '',
-                    'stderr': ''
-                }
-            '''
+            
         else :
 
             if j['command'] == 'ping':
@@ -151,7 +137,25 @@ def process_job(num, input):
                     ret = remote_worker(j['node'], remote_command)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
-                    ret = False
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "execution error %s" % (msg)
+                    }
+                    logger.error("execution error %s" % (msg))
+                else:
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': ret['jobstatus'],
+                        'message': ret['message'],
+                        'returnstatus': ret['returnstatus'],
+                        'stdout': ret['stdout'],
+                        'stderr': ret['stderr']
+                    }
+                    logger.info("Command executed, result: %s" % (upd))
 
             elif j['command'] == 'traceroute':
                 command = 'traceroute'
@@ -162,7 +166,25 @@ def process_job(num, input):
                     ret = remote_worker(j['node'], remote_command)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
-                    ret = False
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "execution error %s" % (msg)
+                    }
+                    logger.error("execution error %s" % (msg))
+                else:
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': ret['jobstatus'],
+                        'message': ret['message'],
+                        'returnstatus': ret['returnstatus'],
+                        'stdout': ret['stdout'],
+                        'stderr': ret['stderr']
+                    }
+                    logger.info("Command executed, result: %s" % (upd))
 
             elif j['command'] == 'iperf':
 
@@ -173,7 +195,15 @@ def process_job(num, input):
                 if not result_dst['status']:
 
                     logger.error("%s : Failed SSH access (%s)" % (j['parameters']['dst'], result_dst['message']))
-                    ret = False
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "Node %s not responding" % (j['parameters']['dst'])
+                    }
+                    logger.error("Node %s not responding" % (j['parameters']['dst']))
 
                 else:
 
@@ -190,26 +220,30 @@ def process_job(num, input):
                     try:
                         ret = remote_worker(j['parameters']['dst'], remote_command_client)
                     except Exception, msg:
-                        logger.error("EXEC error: %s" % (msg,))
-                        ret = False
+                        upd = {
+                            'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                            'jobstatus': 'error',
+                            'message': 'job error',
+                            'returnstatus': 1,
+                            'stdout': '',
+                            'stderr': "execution error %s" % (msg)
+                        }
+                        logger.error("execution error %s" % (msg))
+                    else:
+                        upd = {
+                            'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                            'jobstatus': ret['jobstatus'],
+                            'message': ret['message'],
+                            'returnstatus': ret['returnstatus'],
+                            'stdout': ret['stdout'],
+                            'stderr': ret['stderr']
+                        }
+                        logger.info("Command executed, result: %s" % (upd))
 
                     # wait for the thread to finish
                     ts.join()
 
             else :
-                ret = False
-
-            if ret:
-                upd = {
-                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                    'jobstatus': ret['jobstatus'],
-                    'message': ret['message'],
-                    'returnstatus': ret['returnstatus'],
-                    'stdout': ret['stdout'],
-                    'stderr': ret['stderr']
-                }
-                logger.info("Command executed, result: %s" % (upd))
-            else:
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
                     'jobstatus': 'error',
@@ -219,5 +253,6 @@ def process_job(num, input):
                     'stderr': 'unknown command'
                 }
                 logger.error("Command %s not found" % (j['command']))
+
 
         r.table('jobs').get(job).update(upd).run(c)
