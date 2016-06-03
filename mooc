@@ -21,9 +21,13 @@ DAEMON_NAME=mooc
 DAEMONW=$DIR/myops2-web
 DAEMONW_NAME=moocweb
 
+DAEMONM=$DIR/myops2-monitor
+DAEMONM_NAME=moocmonitor
+
 # Add any command line options for your daemon here
 DAEMON_OPTS=""
 DAEMONW_OPTS=""
+DAEMONM_OPTS=""
 
 # This next line determines what user the script runs as.
 # Root generally not recommended but necessary if you are using the Raspberry Pi GPIO from Python.
@@ -32,6 +36,7 @@ DAEMON_USER=root
 # The process ID of the script when it runs is stored here:
 PIDFILE=/var/run/$DAEMON_NAME.pid
 PIDFILEW=/var/run/$DAEMONW_NAME.pid
+PIDFILEM=/var/run/$DAEMONM_NAME.pid
 
 do_start()
 {
@@ -41,6 +46,10 @@ do_start()
 
     log_daemon_msg "Starting $DAEMONW_NAME service"
     start-stop-daemon --start --background --pidfile $PIDFILEW --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMONW -- $DAEMONW_OPTS
+    log_end_msg $?
+    
+    log_daemon_msg "Starting $DAEMONM_NAME service"
+    start-stop-daemon --start --background --pidfile $PIDFILEM --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMONM -- $DAEMONM_OPTS
     log_end_msg $?
 }
 
@@ -52,6 +61,10 @@ do_stop()
 
     log_daemon_msg "Stopping $DAEMONW_NAME service"
     start-stop-daemon --stop --pidfile $PIDFILEW --retry 10
+    log_end_msg $?
+
+    log_daemon_msg "Stopping $DAEMONM_NAME service"
+    start-stop-daemon --stop --pidfile $PIDFILEM --retry 10
     log_end_msg $?
 }
 
