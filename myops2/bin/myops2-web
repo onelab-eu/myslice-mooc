@@ -42,8 +42,8 @@ def run_httpserver():
 class Application(web.Application):
 
     def __init__(self, dbconnection):
-        self.templates = os.path.join(os.path.dirname(__file__), "../templates")
-        self.static = os.path.join(os.path.dirname(__file__), "../static")
+        self.templates = os.path.join(os.path.dirname(__file__), "../web/templates")
+        self.static = os.path.join(os.path.dirname(__file__), "../web/static")
 
         # DataBase connection
         self.dbconnection = dbconnection
