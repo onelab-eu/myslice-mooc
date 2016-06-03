@@ -68,9 +68,11 @@ class Job(cors.CorsMixin, web.RequestHandler):
         jobs = []
 
         if id is not None:
+            logger.info("GET JOB " % (id))
             ret = yield r.table('jobs').get(id).run(self.application.dbconnection)
             jobs.append(ret)
         else:
+            logger.info("GET ALL JOBS")
             cursor = yield r.table('jobs').run(self.application.dbconnection)
 
             while (yield cursor.fetch_next()):
