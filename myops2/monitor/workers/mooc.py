@@ -240,9 +240,6 @@ def process_job(num, input):
                         }
                         logger.info("Command executed, result: %s" % (upd))
 
-                    # wait for the thread to finish
-                    ts.join()
-
             else :
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
