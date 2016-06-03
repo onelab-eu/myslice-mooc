@@ -41,16 +41,8 @@ class Resources(cors.CorsMixin, web.RequestHandler):
             item = yield cursor.next()
             resources.append(item)
 
-        #self.finish()
-        #id = self.get_argument("id")
-        #value = self.get_argument("value")
-        #data = {"id": id, "value" : value}
+        self.finish(json.dumps({"resources": resources}, cls=DecimalEncoder, default=DateEncoder))
 
-        #self.write({"resources": resources})
-        self.write(json.dumps({"resources": resources}, cls=DecimalEncoder, default=DateEncoder))
-
-        #for c in cl:
-        #    c.write_message(data)
 
     @web.asynchronous
     def post(self):
@@ -82,7 +74,7 @@ class Job(cors.CorsMixin, web.RequestHandler):
                 item = yield cursor.next()
                 jobs.append(item)
 
-        self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
+        self.finish(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
 
     @gen.coroutine
@@ -118,4 +110,4 @@ class Job(cors.CorsMixin, web.RequestHandler):
         for key in rows['generated_keys']:
             ids.append(key)
 
-        self.write(json.dumps({"id": ids}))
+        self.finish(json.dumps({"id": ids}))
