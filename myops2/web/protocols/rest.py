@@ -58,6 +58,9 @@ class Resources(cors.CorsMixin, web.RequestHandler):
 
 class Job(cors.CorsMixin, web.RequestHandler):
 
+    def initialize(self):
+        self.dbconnection = self.application.dbconnection
+
     def set_default_headers(self):
         # to allow CORS
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -69,11 +72,11 @@ class Job(cors.CorsMixin, web.RequestHandler):
 
         if id is not None:
             logger.info("GET JOB " % (id))
-            ret = yield r.table('jobs').get(id).run(self.application.dbconnection)
+            ret = yield r.table('jobs').get(id).run(self.dbconnection)
             jobs.append(ret)
         else:
             logger.info("GET ALL JOBS")
-            cursor = yield r.table('jobs').run(self.application.dbconnection)
+            cursor = yield r.table('jobs').run(self.dbconnection)
 
             while (yield cursor.fetch_next()):
                 item = yield cursor.next()
@@ -106,9 +109,9 @@ class Job(cors.CorsMixin, web.RequestHandler):
             json.dumps(data)
          
 
-        yield r.table('jobs').run(self.application.dbconnection)
+        yield r.table('jobs').run(self.dbconnection)
 
-        rows = yield r.table("jobs").insert(jobs).run(self.application.dbconnection)
+        rows = yield r.table("jobs").insert(jobs).run(self.dbconnection)
 
         ids =[]
         # getting the generated keys from the DB
