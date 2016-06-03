@@ -12,7 +12,7 @@
 import os
 import logging
 
-from tornado import web, ioloop, httpserver
+from tornado import web, gen, ioloop, httpserver
 from rethinkdb import r
 
 
@@ -26,6 +26,7 @@ logging.basicConfig(level=logging.INFO,
                     datefmt="%Y-%m-%d %H:%M:%S",
                     filename="/var/log/myops2-web.log", filemode="a")
 
+@gen.coroutine
 def run_httpserver():
 
     print "Starting web thread"
