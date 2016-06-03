@@ -64,20 +64,18 @@ class Job(cors.CorsMixin, web.RequestHandler):
         self.set_header("Content-Type", "application/json")
 
     @gen.coroutine
-    def get(self, *args):
+    def get(self, id=None):
         jobs = []
 
-        try:
-            id = self.get_argument("id")
-        except Exception:
+        if id is not None:
+            ret = yield r.table('jobs').get(id).run(self.application.dbconnection)
+            jobs.append(ret)
+        else:
             cursor = yield r.table('jobs').run(self.application.dbconnection)
 
             while (yield cursor.fetch_next()):
                 item = yield cursor.next()
                 jobs.append(item)
-        else:
-            ret = yield r.table('jobs').get(id).run(self.application.dbconnection)
-            jobs.append(ret)
 
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
