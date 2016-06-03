@@ -25,32 +25,6 @@ class DecimalEncoder(json.JSONEncoder):
             return (str(o) for o in [o])
         return super(DecimalEncoder, self)._iterencode(o, markers)
 
-def connect():
-    try :
-
-        r.set_loop_type("tornado")
-
-        return r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
-
-    except r.RqlDriverError :
-
-        logger.error("Can't connect to RethinkDB")
-        raise SystemExit("Can't connect to RethinkDB")
-
-
-# class VersionHandler(web.RequestHandler):
-#     def get(self):
-#         response = { 'version': '3.5.1',
-#                      'last_build':  date.today().isoformat() }
-#         self.write(response)
-#
-# class GetGameByIdHandler(web.RequestHandler):
-#     def get(self, id):
-#         response = { 'id': int(id),
-#                      'name': 'Crazy Game',
-#                      'release_date': date.today().isoformat() }
-#         self.write(response)
-
 class Resources(cors.CorsMixin, web.RequestHandler):
 
     def set_default_headers(self):
@@ -61,15 +35,11 @@ class Resources(cors.CorsMixin, web.RequestHandler):
     def get(self, *args):
         resources = []
 
-        connection = yield connect()
-
-        cursor = yield r.table('resources').run(connection)
+        cursor = yield r.table('resources').run(self.application.dbconnection)
 
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
             resources.append(item)
-
-        connection.close()
 
         #self.finish()
         #id = self.get_argument("id")
@@ -97,21 +67,18 @@ class Job(cors.CorsMixin, web.RequestHandler):
     def get(self, *args):
         jobs = []
 
-        connection = yield connect()
-
         try:
             id = self.get_argument("id")
         except Exception:
-            cursor = yield r.table('jobs').run(connection)
+            cursor = yield r.table('jobs').run(self.application.dbconnection)
 
             while (yield cursor.fetch_next()):
                 item = yield cursor.next()
                 jobs.append(item)
         else:
-            ret = yield r.table('jobs').get(id).run(connection)
+            ret = yield r.table('jobs').get(id).run(self.application.dbconnection)
             jobs.append(ret)
 
-        connection.close()
         self.write(json.dumps({"jobs": jobs}, cls=DecimalEncoder, default=DateEncoder))
 
 
@@ -139,17 +106,13 @@ class Job(cors.CorsMixin, web.RequestHandler):
             json.dumps(data)
          
 
-        connection = yield connect()
+        yield r.table('jobs').run(self.application.dbconnection)
 
-        yield r.table('jobs').run(connection)
-
-        rows = yield r.table("jobs").insert(jobs).run(connection)
+        rows = yield r.table("jobs").insert(jobs).run(self.application.dbconnection)
 
         ids =[]
         # getting the generated keys from the DB
         for key in rows['generated_keys']:
             ids.append(key)
-
-        connection.close()
 
         self.write(json.dumps({"id": ids}))

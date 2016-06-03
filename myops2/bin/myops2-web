@@ -9,16 +9,15 @@
     (c) 2014 - 2015 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
 '''
 
-import sys
 import os
 import logging
 
-from tornado import web, ioloop
+from tornado import web, ioloop, httpserver
+from rethinkdb import r
 
-#sys.path.append(os.path.realpath(os.path.dirname(__file__) + '/..'))
-#print os.path.realpath(os.path.dirname(__file__) + '/..')
 
-from myops2.web import templates, static
+from myops2.lib.store import connect as dbconnect
+from myops2.web import static
 from myops2.web.protocols import rest, websocket
 from myops2.web.controllers import home, jobs
 
@@ -27,24 +26,51 @@ logging.basicConfig(level=logging.INFO,
                     datefmt="%Y-%m-%d %H:%M:%S",
                     filename="/var/log/myops2-web.log", filemode="a")
 
-if __name__ == '__main__':
+def run_httpserver():
 
     print "Starting web thread"
 
-    app = web.Application([
-        (r'/', home.Index),
-        (r'/static/(.*)', web.StaticFileHandler, {'path': static}),
-        (r'/jobs', jobs.Log),
+    # Rethinkdb setting for tornado
+    r.set_loop_type("tornado")
+    dbconnection = yield dbconnect()
 
-        (r'/api/resources', rest.Resources),
-        (r'/api/job', rest.Job),
+    http_server = httpserver.HTTPServer(Application(dbconnection))
+    http_server.listen(8111)
 
-        (r'/ws', websocket.Api)
 
-    ], template_path = templates)
+class Application(web.Application):
 
-    app.listen(8111)
+    def __init__(self, dbconnection):
+        self.templates = os.path.join(os.path.dirname(__file__), "../templates")
+        self.static = os.path.join(os.path.dirname(__file__), "../static")
 
+        # DataBase connection
+        self.dbconnection = dbconnection
+
+        handlers = [
+            (r'/', home.Index),
+            (r'/static/(.*)', web.StaticFileHandler, {'path': static}),
+            (r'/jobs', jobs.Log),
+
+            (r'/api/resources', rest.Resources),
+            (r'/api/job', rest.Job),
+
+            (r'/ws', websocket.Api)
+
+        ]
+
+        settings = dict(cookie_secret="x&7G1d2!5MhG9SWkXu",
+                        login_url="/login",
+                        template_path=self.templates,
+                        static_path=self.static,
+                        # xsrf_cookies=True,
+                        debug=True)
+
+        web.Application.__init__(self, handlers, **settings)
+
+if __name__ == '__main__':
+
+    ioloop.IOLoop.current().run_sync(run_httpserver)
 
     try :
         ioloop.IOLoop.instance().start()
@@ -53,20 +79,3 @@ if __name__ == '__main__':
     except Exception as e:
         print e
         exit(1)
-
-    # t = threading.Thread(target=server)
-    # t.daemon = True
-    # t.start()
-
-    # agent threads
-    # threads = []
-    # for y in range(20):
-    #     t = threading.Thread(target=agent, args=(y, input))
-    #     t.daemon = True
-    #     threads.append(t)
-    #     t.start()
-
-    ## main thread, periodically put resources to monitor
-    ## in the input queue
-
-    # t.join()
