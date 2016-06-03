@@ -41,15 +41,21 @@ PIDFILEM=/var/run/$DAEMONM_NAME.pid
 do_start()
 {
     log_daemon_msg "Starting $DAEMON_NAME service"
-    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMON -- $DAEMON_OPTS
+    start-stop-daemon --start --background --pidfile $PIDFILE --make-pidfile \
+        --user $DAEMON_USER --chuid $DAEMON_USER \
+        --startas /bin/bash -- -c "exec $DAEMON $DAEMON_OPTS >> /var/log/myops2-daemon.log 2>&1"
     log_end_msg $?
 
     log_daemon_msg "Starting $DAEMONW_NAME service"
-    start-stop-daemon --start --background --pidfile $PIDFILEW --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMONW -- $DAEMONW_OPTS
+    start-stop-daemon --start --background --pidfile $PIDFILEW --make-pidfile \
+    --user $DAEMON_USER --chuid $DAEMON_USER \
+    --startas /bin/bash -- -c "exec $DAEMONW $DAEMONW_OPTS >> /var/log/myops2-daemon.log 2>&1"
     log_end_msg $?
     
     log_daemon_msg "Starting $DAEMONM_NAME service"
-    start-stop-daemon --start --background --pidfile $PIDFILEM --make-pidfile --user $DAEMON_USER --chuid $DAEMON_USER --startas $DAEMONM -- $DAEMONM_OPTS
+    start-stop-daemon --start --background --pidfile $PIDFILEM --make-pidfile \
+    --user $DAEMON_USER --chuid $DAEMON_USER \
+    --startas /bin/bash -- -c "exec $DAEMONM $DAEMONM_OPTS >> /var/log/myops2-daemon.log 2>&1"
     log_end_msg $?
 }
 
