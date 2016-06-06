@@ -33,9 +33,11 @@ class Resources(cors.CorsMixin, web.RequestHandler):
 
     @gen.coroutine
     def get(self, *args):
+        c = yield self.application.dbconnection
+
         resources = []
 
-        cursor = yield r.table('resources').run(self.application.dbconnection)
+        cursor = yield r.table('resources').run(c)
 
         while (yield cursor.fetch_next()):
             item = yield cursor.next()
@@ -51,7 +53,7 @@ class Resources(cors.CorsMixin, web.RequestHandler):
 class Job(cors.CorsMixin, web.RequestHandler):
 
     def initialize(self):
-        self.dbconnection = yield self.application.dbconnection
+        self.dbconnection = self.application.dbconnection
 
     def set_default_headers(self):
         # to allow CORS
@@ -61,14 +63,15 @@ class Job(cors.CorsMixin, web.RequestHandler):
     @gen.coroutine
     def get(self, id=None):
         jobs = []
+        c = yield self.dbconnection
 
         if id is not None:
             logger.info("GET JOB " % (id))
-            ret = yield r.table('jobs').get(id).run(self.dbconnection)
+            ret = yield r.table('jobs').get(id).run(c)
             jobs.append(ret)
         else:
             logger.info("GET ALL JOBS")
-            cursor = yield r.table('jobs').run(self.dbconnection)
+            cursor = yield r.table('jobs').run(c)
 
             while (yield cursor.fetch_next()):
                 item = yield cursor.next()
@@ -82,6 +85,8 @@ class Job(cors.CorsMixin, web.RequestHandler):
         #post body must be a list
         #jobs = []
         #jobs = tornado.escape.json_decode(self.request.body)
+        c = yield self.dbconnection
+
         jobs = json.loads(self.request.body)
 
         logger.info("Received %s" % (jobs,))
@@ -101,9 +106,9 @@ class Job(cors.CorsMixin, web.RequestHandler):
             json.dumps(data)
          
 
-        yield r.table('jobs').run(self.dbconnection)
+        yield r.table('jobs').run(c)
 
-        rows = yield r.table("jobs").insert(jobs).run(self.dbconnection)
+        rows = yield r.table("jobs").insert(jobs).run(c)
 
         ids =[]
         # getting the generated keys from the DB
