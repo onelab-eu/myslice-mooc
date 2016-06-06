@@ -58,16 +58,19 @@ def agent(num, input):
                 Node access status: e.g. ssh, we try to do a setup on the node and report the result
                 We try also with nodes that are marked as disabled or not working anyway
             '''
+            try:
+                result = r.setup(resource)
+            except Exception as e:
+                logger.error("Error: %s" % e)
+            else:
+                if not result['status'] :
+                    logger.info("%s : Failed SSH access (%s)" % (resource, result['message']))
+                else :
+                    logger.info("%s : Setup complete" % (resource))
 
-            result = r.setup(resource)
-            if not result['status'] :
-                logger.info("%s : Failed SSH access (%s)" % (resource, result['message']))
-            else :
-                logger.info("%s : Setup complete" % (resource))
-
-            s.resource({
-                "hostname": node.hostname,
-                "state": node.boot_state,
-                "access" : result
-            })
+                s.resource({
+                    "hostname": node.hostname,
+                    "state": node.boot_state,
+                    "access" : result
+                })
 
