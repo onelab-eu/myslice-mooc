@@ -71,7 +71,13 @@ class Application(web.Application):
 
 if __name__ == '__main__':
 
-    ioloop.IOLoop.current().run_sync(run_httpserver)
+    r.set_loop_type("tornado")
+    dbconnection = dbconnect()
+
+    app = Application(dbconnection)
+    app.listen(8111)
+
+    #ioloop.IOLoop.current().run_sync(run_httpserver)
 
     try :
         ioloop.IOLoop.instance().start()
