@@ -51,7 +51,7 @@ class Resources(cors.CorsMixin, web.RequestHandler):
 class Job(cors.CorsMixin, web.RequestHandler):
 
     def initialize(self):
-        self.dbconnection = self.application.dbconnection
+        self.dbconnection = yield self.application.dbconnection
 
     def set_default_headers(self):
         # to allow CORS
