@@ -4,7 +4,7 @@ import signal
 import threading
 import logging
 import rethinkdb as r
-from rethinkdb.errors import RqlRuntimeError, RqlDriverError
+from rethinkdb.errors import RqlRuntimeError, RqlDriverError, RqlError, RqlTimeoutError
 
 from myops2.settings import Config
 from myops2.lib.queue import OrderedSetQueue
@@ -27,11 +27,19 @@ def receive_signal(signum, stack):
     except r.RqlDriverError :
         raise SystemExit("Can't connect to RethinkDB")
 
-    logger.info('Cleaning up (deleting all jobs)')
-    r.table("jobs").delete().run(c)
+    #logger.info('Cleaning up (deleting all jobs)')
+    #r.table("jobs").delete().run(c)
 
     raise SystemExit('Exiting')
 
+def rethinkdb_connect():
+    try:
+        return r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError:
+        raise SystemExit("Can't connect to RethinkDB")
+
+def rerun_jobs():
+    pass
 
 if __name__ == '__main__':
 
@@ -39,20 +47,26 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, receive_signal)
     signal.signal(signal.SIGHUP, receive_signal)
 
-    try :
-        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
-    except r.RqlDriverError :
-        raise SystemExit("Can't connect to RethinkDB")
+    ''' input queue '''
+    input = OrderedSetQueue()
+
+    # connection
+    c = rethinkdb_connect()
 
     # setup
     try:
         r.db(Config.rethinkdb["db"]).table_create('jobs').run(c)
     except RqlRuntimeError:
-        pass
+        logger.info("table jobs already exists")
 
+    # cleanup, put wait jobs int he queue
+    waiting_jobs = r.table('jobs').filter({'jobstatus':'waiting'}).run(c)
+    for job in waiting_jobs:
+        logger.info("requeueing job {}".format(job['id']))
+        input.put(job['id'])
 
-    ''' input queue '''
-    input = OrderedSetQueue()
+    # setup end
+    c.close(noreply_wait=False)
 
     # mooc threads
     threads = []
@@ -62,12 +76,26 @@ if __name__ == '__main__':
         threads.append(t)
         t.start()
 
+    while True:
+        # connection
+        c = rethinkdb_connect()
 
-    # main
-    feed = r.table('jobs').changes().run(c)
-    for change in feed:
-        if (change['new_val']['jobstatus'] == 'waiting'):
-            input.put(change['new_val']['id'])
+        # change feed
+        feed = r.table('jobs').changes().run(c)
 
-    logger.info("MOOC: Terminating main process")
-    c.close()
+        while True:
+            try:
+                change = feed.next()
+                if (change['new_val']['jobstatus'] == 'waiting'):
+                    input.put(change['new_val']['id'])
+            except RqlTimeoutError:
+                logger.warn("connection timeout, reconnecting...")
+
+            except RqlDriverError:
+                logger.warn("connection error, reconnecting...")
+            finally:
+                feed.close()
+                c.close(noreply_wait=False)
+                del c
+                del feed
+                break
