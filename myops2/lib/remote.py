@@ -66,8 +66,12 @@ def setup(hostname):
         logger.error('Network error (%s)' % (e))
         return result
 
-
-    sftp = paramiko.SFTPClient.from_transport(transport)
+    try:
+        sftp = paramiko.SFTPClient.from_transport(transport)
+    except Exception as e:
+        logger.error('SFTP error: {}'.format(e))
+        result['message'] = 'SFTP error (%s)' % (e)
+        return result
 
     try:
         sftp.chdir(remote_dir)  # Test if remote_path exists
