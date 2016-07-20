@@ -9,9 +9,15 @@ from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, A
 
 logger = logging.getLogger(__name__)
 
+# PlanetLab Lib is required
+from planetlab import config
+
 # static atm
-username = 'root'
-rsa_private_key = "/root/mooc/rest-api/key/planetlab_root_ssh_key.rsa"
+#username = 'root'
+username = config.get('remote','ssh_user')
+#rsa_private_key = "/root/mooc/rest-api/key/planetlab_root_ssh_key.rsa"
+rsa_private_key = config.get('remote','ssh_root_key')
+logger.info(rsa_private_key)
 remote_dir = "/root/.myops2"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
