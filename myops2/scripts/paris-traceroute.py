@@ -16,15 +16,15 @@ if __name__ == '__main__':
     arguments = sys.argv
     hostname = arguments[1:]
 
-    ping = subprocess.Popen(
-                ["sudo","ping", "-c", "5"] + arguments[1:],
+    paris_traceroute = subprocess.Popen(
+                ["sudo","/usr/local/bin/paris-traceroute"] + arguments[1:],
                 stdout = subprocess.PIPE,
                 stderr = subprocess.PIPE
                 )
-    out, err = ping.communicate()
+    out, err = paris_traceroute.communicate()
 
     print json.dumps({
-        'returnstatus': ping.returncode,
+        'returnstatus': paris_traceroute.returncode,
         'stdout': out,
         'stderr': err
     })

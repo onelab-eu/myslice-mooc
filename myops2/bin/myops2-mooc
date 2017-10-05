@@ -3,6 +3,7 @@
 import signal
 import threading
 import logging
+from myops2.lib import store
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError, RqlError, RqlTimeoutError
 
@@ -50,6 +51,8 @@ if __name__ == '__main__':
     ''' input queue '''
     input = OrderedSetQueue()
 
+    store.setup()
+
     # connection
     c = rethinkdb_connect()
 
@@ -60,7 +63,8 @@ if __name__ == '__main__':
         logger.info("table jobs already exists")
 
     # cleanup, put wait jobs int he queue
-    waiting_jobs = r.table('jobs').filter({'jobstatus':'waiting'}).run(c)
+    table_jobs = r.table("jobs")
+    waiting_jobs = table_jobs.filter({'jobstatus':'waiting'}).run(c)
     for job in waiting_jobs:
         logger.info("requeueing job {}".format(job['id']))
         input.put(job['id'])

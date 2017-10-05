@@ -270,7 +270,34 @@ def process_job(num, input):
                         'stderr': ret['stderr']
                     }
                     logger.info("Command executed, result: %s" % (upd))
+            elif j["command"] == "paris-traceroute":
+                command = 'paris-traceroute'
 
+                remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
+
+                try:
+                    ret = remote_worker(j['node'], remote_command)
+                except Exception, msg:
+                    logger.error("EXEC error: %s" % (msg,))
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "execution error %s" % (msg)
+                    }
+                    logger.error("execution error %s" % (msg))
+                else:
+                    upd = {
+                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'jobstatus': ret['jobstatus'],
+                        'message': ret['message'],
+                        'returnstatus': ret['returnstatus'],
+                        'stdout': ret['stdout'],
+                        'stderr': ret['stderr']
+                    }
+                    logger.info("Command executed, result: %s" % (upd))
             else :
                 upd = {
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),

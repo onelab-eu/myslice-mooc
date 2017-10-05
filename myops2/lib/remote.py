@@ -18,7 +18,7 @@ username = config.get('remote','ssh_user')
 #rsa_private_key = "/root/mooc/rest-api/key/planetlab_root_ssh_key.rsa"
 rsa_private_key = config.get('remote','ssh_root_key')
 logger.info(rsa_private_key)
-remote_dir = "/root/.myops2"
+remote_dir = "/home/upmc_kvermeulen/.myops2"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
 def setup(hostname):
@@ -122,7 +122,7 @@ def connect(hostname):
 
     logger.info("connecting to %s", (hostname,))
     try:
-        ssh.connect(hostname=hostname, username="root", key_filename=rsa_private_key)
+        ssh.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
     except BadHostKeyException as e:
         logger.error(e)
     except AuthenticationException as e:
