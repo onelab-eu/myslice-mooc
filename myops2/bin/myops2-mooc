@@ -10,6 +10,7 @@ from rethinkdb.errors import RqlRuntimeError, RqlDriverError, RqlError, RqlTimeo
 from myops2.settings import Config
 from myops2.lib.queue import OrderedSetQueue
 from myops2.monitor.workers.mooc import process_job
+from myops2.monitor.workers.ripeJobAgent import ripe_process_job
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
@@ -50,6 +51,7 @@ if __name__ == '__main__':
 
     ''' input queue '''
     input = OrderedSetQueue()
+    ripeInput = OrderedSetQueue()
 
     store.setup()
 
@@ -67,7 +69,13 @@ if __name__ == '__main__':
     waiting_jobs = table_jobs.filter({'jobstatus':'waiting'}).run(c)
     for job in waiting_jobs:
         logger.info("requeueing job {}".format(job['id']))
-        input.put(job['id'])
+        try:
+            if (job['type'] == "ripe"):
+                ripeInput.put(job['id'])
+            else:
+                input.put(job['id'])
+        except Exception as e:
+            logger.error(e)
 
     # setup end
     c.close(noreply_wait=False)
@@ -76,6 +84,11 @@ if __name__ == '__main__':
     threads = []
     for y in range(2):
         t = threading.Thread(target=process_job, args=(y, input))
+        t.daemon = True
+        threads.append(t)
+        t.start()
+
+        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
         t.daemon = True
         threads.append(t)
         t.start()
@@ -90,8 +103,13 @@ if __name__ == '__main__':
         while True:
             try:
                 change = feed.next()
-                if (change['new_val']['jobstatus'] == 'waiting'):
-                    input.put(change['new_val']['id'])
+                job = change["new_val"]
+                if (job['jobstatus'] == 'waiting'):
+                    if job["type"] == "ripe":
+                        ripeInput.put(job['id'])
+                    else:
+                        input.put(job['id'])
+
             except RqlTimeoutError:
                 logger.warn("connection timeout, reconnecting...")
 
