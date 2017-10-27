@@ -33,14 +33,14 @@ signal.signal(signal.SIGALRM, handle_timeout)
 class TimeoutError(Exception):
     pass
 
-def remote_worker(hostname, script):
+def remote_worker(hostname, script, semaphore_map):
     # timeout after 15 min
     signal.alarm(900)
 
     logger.info("Running job '%s' on %s" % (script, hostname))
 
     try:
-        result = remote.script(hostname, script)
+        result = remote.script(hostname, script, semaphore_map)
     except TimeoutError:
         logger.info("job '%s' timeout on %s" % (script, hostname))
         ret = {
@@ -86,7 +86,7 @@ def remote_worker(hostname, script):
     return ret
 
 
-def process_job(num, input):
+def process_job(num, input, semaphore_map):
     """
     This worker will try to check for resource availability
 
@@ -248,7 +248,7 @@ def process_job(num, input):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    ret = remote_worker(j['node'], remote_command)
+                    ret = remote_worker(j['node'], remote_command, lock)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
@@ -276,7 +276,7 @@ def process_job(num, input):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    ret = remote_worker(j['node'], remote_command)
+                    ret = remote_worker(j['node'], remote_command, semaphore_map)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {

@@ -4,6 +4,9 @@ import os
 import glob
 import hashlib
 import logging
+import threading
+import time
+
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
 
@@ -20,6 +23,7 @@ rsa_private_key = config.get('remote','ssh_root_key')
 logger.info(rsa_private_key)
 remote_dir = "/home/upmc_kvermeulen/.myops2"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
+
 
 def setup(hostname):
 
@@ -72,57 +76,60 @@ def setup(hostname):
         logger.error('Network error (%s)' % (e))
         return result
 
-    try:
-        sftp = paramiko.SFTPClient.from_transport(transport)
-    except Exception as e:
-        logger.error('SFTP error: {}'.format(e))
-        result['message'] = 'SFTP error (%s)' % (e)
-        return result
-
-    try:
-        sftp.chdir(remote_dir)  # Test if remote_path exists
-    except IOError:
-        sftp.mkdir(remote_dir)  # Create remote_path
-        sftp.chdir(remote_dir)
-
-    for file_name in glob.glob(local_dir + '/*.*'):
-        local_file = os.path.join(local_dir, file_name)
-        remote_file = remote_dir + '/' + os.path.basename(file_name)
-
-        # check if remote file exists
-        try:
-            if sftp.stat(remote_file):
-                local_file_data = open(local_file, "rb").read()
-                remote_file_data = sftp.open(remote_file).read()
-                md1 = hashlib.md5(local_file_data).digest()
-                md2 = hashlib.md5(remote_file_data).digest()
-                if md1 == md2:
-                    pass
-                    #print "UNCHANGED:", os.path.basename(file_name)
-                else:
-                    #print "MODIFIED:", os.path.basename(file_name)
-                    sftp.put(local_file, remote_file)
-        except:
-            #print "NEW: ", os.path.basename(file_name)
-            sftp.put(local_file, remote_file)
-            sftp.chmod(remote_file, 0755)
-    sftp.close()
+    # try:
+    #     sftp = paramiko.SFTPClient.from_transport(transport)
+    # except Exception as e:
+    #     logger.error('SFTP error: {}'.format(e))
+    #     result['message'] = 'SFTP error (%s)' % (e)
+    #     return result
+    #
+    # # try:
+    # #     sftp.chdir(remote_dir)  # Test if remote_path exists
+    # # except IOError:
+    # #     sftp.mkdir(remote_dir)  # Create remote_path
+    # #     sftp.chdir(remote_dir)
+    # #
+    # # for file_name in glob.glob(local_dir + '/*.*'):
+    # #     local_file = os.path.join(local_dir, file_name)
+    # #     remote_file = remote_dir + '/' + os.path.basename(file_name)
+    # #
+    # #     # check if remote file exists
+    # #     try:
+    # #         if sftp.stat(remote_file):
+    # #             local_file_data = open(local_file, "rb").read()
+    # #             remote_file_data = sftp.open(remote_file).read()
+    # #             md1 = hashlib.md5(local_file_data).digest()
+    # #             md2 = hashlib.md5(remote_file_data).digest()
+    # #             if md1 == md2:
+    # #                 pass
+    # #                 #print "UNCHANGED:", os.path.basename(file_name)
+    # #             else:
+    # #                 #print "MODIFIED:", os.path.basename(file_name)
+    # #                 sftp.put(local_file, remote_file)
+    # #     except:
+    # #         #print "NEW: ", os.path.basename(file_name)
+    # #         sftp.put(local_file, remote_file)
+    # #         sftp.chmod(remote_file, 0755)
+    # sftp.close()
 
     result['status'] = True
     result['message'] = 'Setup complete'
     logger.info('Setup complete')
     return result
 
-def connect(hostname):
+def connect(hostname, semaphore_map):
     '''
     Try to connect to remote host
     '''
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    logger.info("connecting to %s", (hostname,))
+    logger.info("connecting to %s lock address : %d", hostname,id(semaphore_map[hostname]))
     try:
-        ssh.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
+        semaphore = semaphore_map[hostname]
+        with semaphore:
+            time.sleep(0.05)
+            ssh.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
     except BadHostKeyException as e:
         logger.error(e)
     except AuthenticationException as e:
@@ -136,11 +143,11 @@ def connect(hostname):
 
     return ssh
 
-def execute(hostname, command):
+def execute(hostname, command, semaphore_map):
 
     result = ''
 
-    ssh = connect(hostname)
+    ssh = connect(hostname, semaphore_map)
 
     # Send the command (non-blocking)
     logger.info("executing %s", (command,))
@@ -161,12 +168,12 @@ def execute(hostname, command):
 
     return output
 
-def script(hostname, script):
+def script(hostname, script, semaphore_map):
     '''
     Executes a script on the remote node.
     Scripts will return a json formatted string with result and information
     '''
-    result = execute(hostname, remote_dir + "/" + script)
+    result = execute(hostname, remote_dir + "/" + script, semaphore_map)
 
     return result
 

@@ -9,7 +9,7 @@ setup(name='myops2',
       license='MIT',
       packages=find_packages(),
       #packages=['myops2','myops2.lib','myops2.monitor','myops2.oml',],
-      scripts=['myops2/bin/myops2-monitor', 'myops2/bin/myops2-shell', 'myops2/bin/myops2-web'],
+      scripts=['myops2/bin/myops2-monitor', 'myops2/bin/myops2-shell', 'myops2/bin/myops2-web', 'myops2/bin/myops-mooc'],
       #data_files=[('/etc', ['config/planetlab.cfg-dist']),
       #            ('/etc/init.d', ['init/myops2'])],
       zip_safe=False)
