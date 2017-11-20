@@ -15,10 +15,10 @@ from myops2.lib.queue import OrderedSetQueue
 from myops2.monitor.workers.mooc import process_job
 from myops2.monitor.workers.ripeJobAgent import ripe_process_job
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.ERROR,
                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S")
-#                    filename="/var/log/myops2-mooc.log", filemode="a")
+                    datefmt="%Y-%m-%d %H:%M:%S",
+                    filename="/var/log/myops2-mooc.log", filemode="a")
 
 logger = logging.getLogger(__name__)
 
@@ -88,11 +88,11 @@ if __name__ == '__main__':
     semaphore_map = {}
     with open(sys.argv[1]) as node_list:
         for node in node_list:
-            semaphore_map.update({node.strip(): threading.Semaphore(5)})
+            semaphore_map.update({node.strip(): threading.Semaphore(1)})
 
     # mooc threads
     threads = []
-    for y in range(100):
+    for y in range(20):
         t = threading.Thread(target=process_job, args=(y, input, semaphore_map))
         t.daemon = True
         threads.append(t)

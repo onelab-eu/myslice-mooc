@@ -6,9 +6,14 @@ import hashlib
 import logging
 import threading
 import time
+import re
 
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
+
+#logging.basicConfig(level=logging.DEBUG,
+#                   format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+#                  datefmt="%Y-%m-%d %H:%M:%S")
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +30,7 @@ remote_dir = "/home/upmc_kvermeulen/.myops2"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
 
-def setup(hostname):
+def setup(hostname, semaphore_map):
 
     result = { "status" : False, "message" : None }
     logger.info("connecting to %s", (hostname,))
@@ -74,6 +79,74 @@ def setup(hostname):
         # if there was a network error
         result['message'] = 'Network error (%s)' % (e)
         logger.error('Network error (%s)' % (e))
+        return result
+
+    #Testing the presence of TCPDUMP
+    try:
+        semaphore = semaphore_map[hostname]
+        with semaphore:
+            time.sleep(1)
+            s = paramiko.SSHClient()
+            #s.load_system_host_keys()
+            s.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            s.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
+
+            command = 'which tcpdump'
+            (stdin, stdout, stderr) = s.exec_command(command)
+            logger.info('********************************')
+            logger.info('Executing "which tcpdump" ...')
+            logger.info('********************************\n')
+
+            if stdout.readlines() == []:
+                logger.error("TCPDUMP is not present")
+            else:
+                logger.info("TCPDUMP found")
+
+        #Testing the presence of WGET (web client)
+
+            command = 'which wget'
+            (stdin, stdout, stderr) = s.exec_command(command)
+            logger.info('********************************')
+            logger.info('Executing "which wget" ...')
+            logger.info('********************************\n')
+
+            if stdout.readlines() == []:
+                logger.error("WGET is not present")
+            else:
+                logger.info("WGET found")
+
+        #Testing the presence of CURL (web client)
+
+            command = 'which curl'
+            (stdin, stdout, stderr) = s.exec_command(command)
+            logger.info('********************************')
+            logger.info('Executing "which curl" ...')
+            logger.info('********************************\n')
+
+            if stdout.readlines() == []:
+                logger.error("CURL is not present")
+            else:
+                logger.info("CURL found")
+
+        #Testing the presence of APACHE (web server)
+
+            command = 'ps aux | grep apache'
+            (stdin, stdout, stderr) = s.exec_command(command)
+            logger.info('********************************')
+            logger.info('Executing "ps aux | grep apache" ...')
+            logger.info('********************************\n')
+
+            stdout_grep = stdout.readline()
+
+            if stdout_grep.find("/usr/sbin/apache2") != -1:
+                logger.info("Server web (APACHE) is running")
+            else:
+                logger.info("Server web (APACHE) is not running")
+
+            s.close()
+    except SSHException as e:
+        result['message'] = 'Network error (%s)' % (e)
+        logger.error('Network error (%s)' %(e))
         return result
 
     # try:
@@ -128,7 +201,7 @@ def connect(hostname, semaphore_map):
     try:
         semaphore = semaphore_map[hostname]
         with semaphore:
-            time.sleep(0.05)
+            time.sleep(0.25)
             ssh.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
     except BadHostKeyException as e:
         logger.error(e)
@@ -178,7 +251,7 @@ def script(hostname, script, semaphore_map):
     return result
 
 if __name__ == '__main__':
-    node = 'mimas.ipv6.lip6.fr'
+    node = 'ple41.planet-lab.eu'
     setup(node)
-    r = script(node, 'networks.sh')
-    print r
+    #r = script(node, 'networks.sh')
+    #print r

@@ -62,6 +62,7 @@ def remote_worker(hostname, script, semaphore_map):
     else:
         logger.info("job '%s' completed on %s" % (script, hostname))
         try:
+            logger.info("JSON: %s", result)
             r = json.loads(result)
         except Exception, msg:
             logger.error("JSON error: %s" % (msg,))
@@ -114,7 +115,7 @@ def process_job(num, input, semaphore_map):
             'message': 'executing job'
         }).run(c)
 
-        result = remote.setup(j['node'])
+        result = remote.setup(j['node'],semaphore_map)
         if not result['status'] :
             logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
             upd = {
@@ -248,7 +249,7 @@ def process_job(num, input, semaphore_map):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    ret = remote_worker(j['node'], remote_command, lock)
+                    ret = remote_worker(j['node'], remote_command)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
