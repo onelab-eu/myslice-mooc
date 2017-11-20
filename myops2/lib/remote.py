@@ -81,73 +81,6 @@ def setup(hostname, semaphore_map):
         logger.error('Network error (%s)' % (e))
         return result
 
-    #Testing the presence of TCPDUMP
-    try:
-        semaphore = semaphore_map[hostname]
-        with semaphore:
-            time.sleep(1)
-            s = paramiko.SSHClient()
-            #s.load_system_host_keys()
-            s.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            s.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
-
-            command = 'which tcpdump'
-            (stdin, stdout, stderr) = s.exec_command(command)
-            logger.info('********************************')
-            logger.info('Executing "which tcpdump" ...')
-            logger.info('********************************\n')
-
-            if stdout.readlines() == []:
-                logger.error("TCPDUMP is not present")
-            else:
-                logger.info("TCPDUMP found")
-
-        #Testing the presence of WGET (web client)
-
-            command = 'which wget'
-            (stdin, stdout, stderr) = s.exec_command(command)
-            logger.info('********************************')
-            logger.info('Executing "which wget" ...')
-            logger.info('********************************\n')
-
-            if stdout.readlines() == []:
-                logger.error("WGET is not present")
-            else:
-                logger.info("WGET found")
-
-        #Testing the presence of CURL (web client)
-
-            command = 'which curl'
-            (stdin, stdout, stderr) = s.exec_command(command)
-            logger.info('********************************')
-            logger.info('Executing "which curl" ...')
-            logger.info('********************************\n')
-
-            if stdout.readlines() == []:
-                logger.error("CURL is not present")
-            else:
-                logger.info("CURL found")
-
-        #Testing the presence of APACHE (web server)
-
-            command = 'ps aux | grep apache'
-            (stdin, stdout, stderr) = s.exec_command(command)
-            logger.info('********************************')
-            logger.info('Executing "ps aux | grep apache" ...')
-            logger.info('********************************\n')
-
-            stdout_grep = stdout.readline()
-
-            if stdout_grep.find("/usr/sbin/apache2") != -1:
-                logger.info("Server web (APACHE) is running")
-            else:
-                logger.info("Server web (APACHE) is not running")
-
-            s.close()
-    except SSHException as e:
-        result['message'] = 'Network error (%s)' % (e)
-        logger.error('Network error (%s)' %(e))
-        return result
 
     # try:
     #     sftp = paramiko.SFTPClient.from_transport(transport)
@@ -219,13 +152,18 @@ def connect(hostname, semaphore_map):
 def execute(hostname, command, semaphore_map):
 
     result = ''
+    output = ''
 
     ssh = connect(hostname, semaphore_map)
 
     # Send the command (non-blocking)
     logger.info("executing %s", (command,))
-    stdin, stdout, stderr = ssh.exec_command(command)
-
+    try:
+	stdin, stdout, stderr = ssh.exec_command(command)
+    except SSHException:
+	pass
+    else:
+	
     # Wait for the command to terminate
     # while not stdout.channel.exit_status_ready():
     #     # Only print data if there is data to read in the channel
@@ -235,7 +173,7 @@ def execute(hostname, command, semaphore_map):
     #             # Print data from stdout
     #             result += stdout.channel.recv(1024)
 
-    output = stdout.read()
+    	output = stdout.read()
 
     ssh.close()
 

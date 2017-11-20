@@ -29,10 +29,10 @@ lock = threading.Lock()
 def receive_signal(signum, stack):
     logger.info('Received signal %s', signum)
 
-    try :
-        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
-    except r.RqlDriverError :
-        raise SystemExit("Can't connect to RethinkDB")
+    #try :
+    #    c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    #except r.RqlDriverError :
+    #    raise SystemExit("Can't connect to RethinkDB")
 
     #logger.info('Cleaning up (deleting all jobs)')
     #r.table("jobs").delete().run(c)
@@ -83,7 +83,7 @@ if __name__ == '__main__':
             logger.error(e)
 
     # setup end
-    c.close(noreply_wait=False)
+    #c.close(noreply_wait=False)
 
     semaphore_map = {}
     with open(sys.argv[1]) as node_list:
@@ -92,42 +92,26 @@ if __name__ == '__main__':
 
     # mooc threads
     threads = []
-    for y in range(20):
+    for y in range(10):
         t = threading.Thread(target=process_job, args=(y, input, semaphore_map))
         t.daemon = True
         threads.append(t)
         t.start()
+    
+#    for y in range(4):
+#        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
+#        t.daemon = True
+#        threads.append(t)
+#        t.start()
 
-        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
-        t.daemon = True
-        threads.append(t)
-        t.start()
 
-    while True:
-        # connection
-        c = rethinkdb_connect()
+    # change feed
+    feed = r.table('jobs').changes().run(c)
 
-        # change feed
-        feed = r.table('jobs').changes().run(c)
-
-        while True:
-            try:
-                change = feed.next()
-                job = change["new_val"]
-                if (job['jobstatus'] == 'waiting'):
-                    if job["type"] == "ripe":
-                        ripeInput.put(job['id'])
-                    else:
-                        input.put(job['id'])
-
-            except RqlTimeoutError:
-                logger.warn("connection timeout, reconnecting...")
-
-            except RqlDriverError:
-                logger.warn("connection error, reconnecting...")
-            finally:
-                feed.close()
-                c.close(noreply_wait=False)
-                del c
-                del feed
-                break
+    for change in feed:
+         job = change["new_val"]
+         if (job['jobstatus'] == 'waiting'):
+             if job["type"] == "ripe":
+                 ripeInput.put(job['id'])
+             else:
+                 input.put(job['id'])

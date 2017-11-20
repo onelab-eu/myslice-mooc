@@ -115,8 +115,9 @@ def process_job(num, input, semaphore_map):
             'message': 'executing job'
         }).run(c)
 
-        result = remote.setup(j['node'],semaphore_map)
-        if not result['status'] :
+        #result = remote.setup(j['node'],semaphore_map)
+        #if not result['status'] :
+	if not True:
             logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
             upd = {
                 'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
