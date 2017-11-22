@@ -167,7 +167,7 @@ def process_job(num, input, semaphore_map):
                 remote_command = '%s.py %s %s' % (command, j['parameters']['arg'], j['parameters']['dst'])
 
                 try:
-                    ret = remote_worker(j['node'], remote_command)
+                    ret = remote_worker(j['node'], remote_command, semaphore_map)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
