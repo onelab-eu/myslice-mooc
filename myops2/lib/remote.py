@@ -160,7 +160,8 @@ def execute(hostname, command, semaphore_map):
     logger.info("executing %s", (command,))
     try:
 	stdin, stdout, stderr = ssh.exec_command(command)
-    except SSHException:
+    except SSHException as e:
+        print e
 	pass
     else:
 	
@@ -174,6 +175,7 @@ def execute(hostname, command, semaphore_map):
     #             result += stdout.channel.recv(1024)
 
     	output = stdout.read()
+        error = stderr.read()
 
     ssh.close()
 
