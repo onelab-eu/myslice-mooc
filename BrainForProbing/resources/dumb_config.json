@@ -1,0 +1,21 @@
+[{
+  "type": "ripe",
+
+  "sources": [
+     33925
+
+  ],
+
+  "destinations": [
+    "google.fr"
+
+  ],
+
+  "commands": [
+    {
+      "command": "paris-traceroute"
+    }
+
+
+  ]
+}]

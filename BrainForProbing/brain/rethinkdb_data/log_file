@@ -1,0 +1,54 @@
+2017-11-20T17:43:47.417417171 0.128663s notice: Recursively removing directory /home/kevin/BrainForProbing/brain/rethinkdb_data/tmp
+2017-11-20T17:43:47.432769236 0.144017s notice: Initializing directory /home/kevin/BrainForProbing/brain/rethinkdb_data
+2017-11-20T17:43:47.432878574 0.144124s info: Creating a default database for your convenience. (This is because you ran 'rethinkdb' without 'create', 'serve', or '--join', and the directory '/home/kevin/BrainForProbing/brain/rethinkdb_data' did not already exist or is empty.)
+2017-11-20T17:43:47.432901550 0.144146s notice: Running rethinkdb 2.3.6 (GCC 4.8.3)...
+2017-11-20T17:43:47.437183462 0.148430s notice: Running on Linux 3.10.0-693.el7.x86_64 x86_64
+2017-11-20T17:43:47.437225041 0.148470s notice: Loading data from directory /home/kevin/BrainForProbing/brain/rethinkdb_data
+2017-11-20T17:43:47.560844434 0.272092s info: Automatically using cache size of 2705 MB
+2017-11-20T17:43:47.562899245 0.274144s notice: Listening for intracluster connections on port 29015
+2017-11-20T17:43:47.564474313 0.275719s notice: Listening for client driver connections on port 28015
+2017-11-20T17:43:47.564597135 0.275842s notice: Listening for administrative HTTP connections on port 8080
+2017-11-20T17:43:47.564600385 0.275845s notice: Listening on cluster addresses: 127.0.0.1, ::1
+2017-11-20T17:43:47.564600836 0.275846s notice: Listening on driver addresses: 127.0.0.1, ::1
+2017-11-20T17:43:47.564615150 0.275860s notice: Listening on http addresses: 127.0.0.1, ::1
+2017-11-20T17:43:47.564616806 0.275862s notice: To fully expose RethinkDB on the network, bind to all addresses by running rethinkdb with the `--bind all` command line option.
+2017-11-20T17:43:47.564619711 0.275865s notice: Server ready, "io_planet_lab_eu_6it" 4e2aed97-2b97-45e4-ac98-9dfc96d6d1cb
+2017-11-20T17:44:34.703452353 0.042206s notice: Running rethinkdb 2.3.6 (GCC 4.8.3)...
+2017-11-20T17:44:34.707168336 0.045908s notice: Running on Linux 3.10.0-693.el7.x86_64 x86_64
+2017-11-20T17:44:34.707225571 0.045962s notice: Loading data from directory /home/kevin/BrainForProbing/brain/rethinkdb_data
+2017-11-20T17:44:34.745196210 0.083934s info: Automatically using cache size of 7257 MB
+2017-11-20T17:44:34.746815173 0.085552s notice: Listening for intracluster connections on port 29015
+2017-11-20T17:44:34.748447310 0.087184s notice: Listening for client driver connections on port 28015
+2017-11-20T17:44:34.748590148 0.087327s notice: Listening for administrative HTTP connections on port 8080
+2017-11-20T17:44:34.748592443 0.087329s notice: Listening on cluster addresses: 127.0.0.1, ::1
+2017-11-20T17:44:34.748593041 0.087330s notice: Listening on driver addresses: 127.0.0.1, ::1
+2017-11-20T17:44:34.748596740 0.087333s notice: Listening on http addresses: 127.0.0.1, ::1
+2017-11-20T17:44:34.748598434 0.087335s notice: To fully expose RethinkDB on the network, bind to all addresses by running rethinkdb with the `--bind all` command line option.
+2017-11-20T17:44:34.748601218 0.087338s notice: Server ready, "io_planet_lab_eu_6it" 4e2aed97-2b97-45e4-ac98-9dfc96d6d1cb
+2017-11-20T17:45:09.340076218 34.678813s info: Table 3c775a56-79a7-45aa-8982-eec7e35f41f1: Starting a new Raft election for term 1.
+2017-11-20T17:45:09.340855799 34.679593s info: Table 3c775a56-79a7-45aa-8982-eec7e35f41f1: Added replica on this server.
+2017-11-20T17:45:09.364573357 34.703310s info: Table 3c775a56-79a7-45aa-8982-eec7e35f41f1: This server is Raft leader for term 1. Latest log index is 0.
+2017-11-20T17:45:10.098382650 35.437120s info: Table 4542331c-6608-4df3-9042-4a336ad2d067: Starting a new Raft election for term 1.
+2017-11-20T17:45:10.098799142 35.437536s info: Table 4542331c-6608-4df3-9042-4a336ad2d067: Added replica on this server.
+2017-11-20T17:45:10.122401745 35.461139s info: Table 4542331c-6608-4df3-9042-4a336ad2d067: This server is Raft leader for term 1. Latest log index is 0.
+2017-11-20T17:45:10.857317329 36.196054s info: Table 77999477-51af-4e81-883f-dc27b1927e65: Starting a new Raft election for term 1.
+2017-11-20T17:45:10.857601245 36.196338s info: Table 77999477-51af-4e81-883f-dc27b1927e65: Added replica on this server.
+2017-11-20T17:45:10.880427908 36.219165s info: Table 77999477-51af-4e81-883f-dc27b1927e65: This server is Raft leader for term 1. Latest log index is 0.
+2017-11-20T18:05:18.394087003 0.091502s notice: Running rethinkdb 2.3.6 (GCC 4.8.3)...
+2017-11-20T18:05:18.397974390 0.095364s notice: Running on Linux 3.10.0-693.el7.x86_64 x86_64
+2017-11-20T18:05:18.398031096 0.095419s notice: Loading data from directory /home/kevin/BrainForProbing/brain/rethinkdb_data
+2017-11-20T18:05:18.441504690 0.138894s info: Automatically using cache size of 7260 MB
+2017-11-20T18:05:18.442425133 0.139813s notice: Listening for intracluster connections on port 29015
+2017-11-20T18:05:18.475452471 0.172841s notice: Listening for client driver connections on port 28015
+2017-11-20T18:05:18.475645402 0.173033s notice: Listening for administrative HTTP connections on port 8080
+2017-11-20T18:05:18.475647751 0.173035s notice: Listening on cluster addresses: 127.0.0.1, ::1
+2017-11-20T18:05:18.475713283 0.173101s notice: Listening on driver addresses: 127.0.0.1, ::1
+2017-11-20T18:05:18.475715397 0.173103s notice: Listening on http addresses: 127.0.0.1, ::1
+2017-11-20T18:05:18.475717998 0.173105s notice: To fully expose RethinkDB on the network, bind to all addresses by running rethinkdb with the `--bind all` command line option.
+2017-11-20T18:05:18.475719543 0.173107s notice: Server ready, "io_planet_lab_eu_6it" 4e2aed97-2b97-45e4-ac98-9dfc96d6d1cb
+2017-11-20T18:05:19.630849341 1.328237s info: Table 77999477-51af-4e81-883f-dc27b1927e65: Starting a new Raft election for term 2.
+2017-11-20T18:05:19.657444045 1.354832s info: Table 77999477-51af-4e81-883f-dc27b1927e65: This server is Raft leader for term 2. Latest log index is 3.
+2017-11-20T18:05:20.077809638 1.775197s info: Table 3c775a56-79a7-45aa-8982-eec7e35f41f1: Starting a new Raft election for term 2.
+2017-11-20T18:05:20.098683573 1.796071s info: Table 3c775a56-79a7-45aa-8982-eec7e35f41f1: This server is Raft leader for term 2. Latest log index is 3.
+2017-11-20T18:05:20.415079453 2.112467s info: Table 4542331c-6608-4df3-9042-4a336ad2d067: Starting a new Raft election for term 2.
+2017-11-20T18:05:20.447799014 2.145187s info: Table 4542331c-6608-4df3-9042-4a336ad2d067: This server is Raft leader for term 2. Latest log index is 3.

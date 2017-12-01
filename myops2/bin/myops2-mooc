@@ -92,17 +92,17 @@ if __name__ == '__main__':
 
     # mooc threads
     threads = []
-    for y in range(10):
+    for y in range(50):
         t = threading.Thread(target=process_job, args=(y, input, semaphore_map))
         t.daemon = True
         threads.append(t)
         t.start()
     
-#    for y in range(4):
-#        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
-#        t.daemon = True
-#        threads.append(t)
-#        t.start()
+    for y in range(25):
+        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
+        t.daemon = True
+        threads.append(t)
+        t.start()
 
 
     # change feed

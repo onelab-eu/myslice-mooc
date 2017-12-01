@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from ripe.atlas.cousteau import Ping, Traceroute, AtlasSource, AtlasCreateRequest, AtlasRequest
+from ripe.atlas.cousteau import Ping, Traceroute, AtlasSource, AtlasCreateRequest, AtlasRequest, AtlasStopRequest
 import threading
 import time
 import logging
@@ -8,15 +8,19 @@ import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
 from myops2.settings import Config
 from myops2.lib.store import connect
+from datetime import timedelta
 
+cv = threading.Condition()
 logger = logging.getLogger(__name__)
+running_ripe_jobs = 0
+RIPE_CONCURRENT_LIMIT = 25
+CREDITS_TOTAL_MEASUREMENTS = 0
+TOTAL_MEASUREMENTS = 684 #Sources * Destinations defined in the sender.py configuration file
 
-ATLAS_API_KEY = "51d05d93-dfa7-4c4d-b78c-8e719e73cfbb"
+ATLAS_API_KEYS = ["51d05d93-dfa7-4c4d-b78c-8e719e73cfbb","4943e4a5-5a20-4e1b-a090-098873772fa9"]
+ATLAS_API_KEY = ATLAS_API_KEYS[1]
 
 threads_results = []
-
-c = connect()
-
 
 def createSource(nodeID):
     source = AtlasSource(
@@ -30,21 +34,24 @@ def createSource(nodeID):
 
 
 def createRequest(source, request, job, input):
+    now = datetime.utcnow()
     atlas_request = AtlasCreateRequest(
-        start_time=datetime.utcnow(),
+        start_time=now,
         key=ATLAS_API_KEY,
         measurements=[request],
+        response_timeout = 15,
         sources=[source],
         is_oneoff=True
     )
     logger.info("Request created")
-
-    (is_success, response) = atlas_request.create()
+    with cv:
+        (is_success, response) = atlas_request.create()
+        time.sleep(0.5)
 
     if (is_success):
         logger.info("Request launched")
         logger.info("Measurement id : " + str(response['measurements'][0]))
-        input.put((response['measurements'][0], job))
+        input.put((response['measurements'][0], job, now))
         return 1
     else:
         logger.info("Error : Request creation")
@@ -52,7 +59,7 @@ def createRequest(source, request, job, input):
         return 0
 
 
-def createMeasurement(source, dest, type, job, input):
+def createMeasurement(c, source, dest, type, job, input):
     msm = ""
     if (type == "ping"):
         msm = Ping(af=4, target=dest, description="Ping request")
@@ -63,6 +70,7 @@ def createMeasurement(source, dest, type, job, input):
             af=4,
             target=dest,
             description="TracerouteRequest",
+            # TODO Pass the protocol as a parameter
             protocol="ICMP",
         )
         logger.info("Traceroute created")
@@ -73,6 +81,9 @@ def createMeasurement(source, dest, type, job, input):
             'jobstatus': 'error',
             'message': 'Cannot create request'
         }).run(c)
+        with cv:
+            global running_ripe_jobs
+            running_ripe_jobs = running_ripe_jobs - 1
         return
 
 
@@ -81,25 +92,36 @@ def fetchResult(msm_id):
         Function to fetch results from ripe server
     """
     url_path = "/api/v2/measurements/" + str(msm_id)
-    request = AtlasRequest(**{"url_path": url_path})
+    request = AtlasRequest(key=ATLAS_API_KEY, url_path=url_path, headers={"Cache-Control": "no-cache "})
+
+
     response = []
     (is_success, response) = request.get()
+    status_name = response["status"]["name"]
+
     if not is_success:
         logger.error("Problem on URL request")
         return (False, ["Cannot fetch results"])
     else:
-        if response["status"]["name"] == "No suitable probes":
-            logger.eorro("msm " + str(msm_id) + " : No suitable probes")
+        if status_name == "No suitable probes":
+            logger.error("msm " + str(msm_id) + " : No suitable probes")
             return (False, ["No suitable probes"])
-    url_path = "/api/v2/measurements/" + str(msm_id) + "/results"
-    request = AtlasRequest(**{"url_path": url_path})
+    if status_name == "Stopped":
+        url_path = "/api/v2/measurements/" + str(msm_id) + "/results"
+        request = AtlasRequest(**{"url_path": url_path})
+        result_response = []
+        (is_success, result_response) = request.get()
+        return (is_success, result_response)
     response = []
-    (is_success, response) = request.get()
     return (is_success, response)
-
 
 def waitForResults(id, input):
     pending = []
+    try :
+        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError :
+        logger.error("Can't connect to RethinkDB")
+        raise SystemExit("Can't connect to RethinkDB")
     while (True):
         try:
             while (True):
@@ -112,7 +134,9 @@ def waitForResults(id, input):
         tmp = []
 
         for j_info in pending:
+
             logger.info("Result fetcher " + str(id) + ": Fetching measurement " + str(j_info[0]) + " results")
+            # j_info[0] corresponds to the msm_id
             (is_success, response) = fetchResult(j_info[0])
             if not is_success:
                 # Stocker messag erreur
@@ -122,23 +146,36 @@ def waitForResults(id, input):
                     'jobstatus': 'error',
                     'message': response[0]
                 }).run(c)
-                continue
+                global running_ripe_jobs
+                with cv:
+                    running_ripe_jobs = running_ripe_jobs - 1
+                    cv.notifyAll()
 
+                continue
+            # TODO check len(response)
             if response != []:
                 # Stocker resultats
                 logger.info("Result fetcher " + str(id) + ": result for measurement " + str(j_info[0]) + ": \n" + str(
                     response) + "\n")
+
                 r.table('jobs').get(j_info[1]).update({
                     'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-                    'jobstatus': 'completed',
+                    'jobstatus': 'finished',
                     'message': 'Done',
                     'stdout': str(response)
                 }).run(c)
+                global running_ripe_jobs
+                with cv:
+                    running_ripe_jobs = running_ripe_jobs - 1
+                    cv.notifyAll()
+
             else:
                 logger.info("Result fetcher " + str(id) + ": measurement " + str(j_info[0]) + " still on going");
                 tmp.append(j_info)
+
         pending = tmp
-        time.sleep(5)
+        time.sleep(310)
+
 
 
 def startResultThread(num):
@@ -172,6 +209,12 @@ def ripe_process_job(num, input):
     """
     logger.info("Agent %s starting" % num)
 
+    try :
+        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+    except r.RqlDriverError :
+        logger.error("Can't connect to RethinkDB")
+        raise SystemExit("Can't connect to RethinkDB")
+
     inputResults = startResultThread(num)
 
     while True:
@@ -182,11 +225,6 @@ def ripe_process_job(num, input):
 
         logger.info("Job: %s" % (j,))
 
-        r.table('jobs').get(job).update({
-            'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
-            'jobstatus': 'running',
-            'message': 'executing job'
-        }).run(c)
 
         if not 'arg' in j['parameters']:
             j['parameters']['arg'] = ""
@@ -195,7 +233,23 @@ def ripe_process_job(num, input):
         if j['command'] == 'ping':
             createMeasurement(source, j['parameters']['dst'], "ping", job, inputResults)
         elif j['command'] == 'traceroute':
-            createMeasurement(source, j['parameters']['dst'], "traceroute", job, inputResults)
+            global running_ripe_jobs
+            with cv:
+                while running_ripe_jobs >= RIPE_CONCURRENT_LIMIT:
+                    cv.wait()
+                running_ripe_jobs = running_ripe_jobs + 1
+
+
+            r.table('jobs').get(job).update({
+                'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'jobstatus': 'running',
+                'message': 'executing job'
+            }).run(c)
+
+            createMeasurement(c, source, j['parameters']['dst'], "traceroute", job, inputResults)
+
+
+
         else:
             logger.info("Job: %s measurement type unknown" % (job,))
             r.table('jobs').get(job).update({
@@ -203,3 +257,9 @@ def ripe_process_job(num, input):
                 'jobstatus': 'error',
                 'message': 'measurement type unknown'
             }).run(c)
+
+
+if __name__ == '__main__':
+    #delete_request = AtlasStopRequest(msm_id="10359621", key=ATLAS_API_KEY)
+
+    request = fetchResult("10360807")

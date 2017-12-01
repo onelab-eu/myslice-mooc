@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "sender.py", line 108, in <module>
+    start()
+  File "sender.py", line 82, in start
+    startSendRequestTask(measure["body"], measure["frequency"])
+TypeError: startSendRequestTask() takes exactly 1 argument (2 given)
