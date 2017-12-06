@@ -109,9 +109,10 @@ if __name__ == '__main__':
     feed = r.table('jobs').changes().run(c)
 
     for change in feed:
-         job = change["new_val"]
-         if (job['jobstatus'] == 'waiting'):
-             if job["type"] == "ripe":
-                 ripeInput.put(job['id'])
-             else:
-                 input.put(job['id'])
+        job = change["new_val"]
+	if job is not None:
+            if (job['jobstatus'] == 'waiting'):
+                if job["type"] == "ripe":
+                    ripeInput.put(job['id'])
+                else:
+                    input.put(job['id'])

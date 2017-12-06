@@ -36,7 +36,7 @@ def createSource(nodeID):
 def createRequest(source, request, job, input):
     now = datetime.utcnow()
     atlas_request = AtlasCreateRequest(
-        start_time=now,
+        start_time=now+timedelta(minutes=6),
         key=ATLAS_API_KEY,
         measurements=[request],
         response_timeout = 15,
@@ -54,8 +54,8 @@ def createRequest(source, request, job, input):
         input.put((response['measurements'][0], job, now))
         return 1
     else:
-        logger.info("Error : Request creation")
-        logger.info(str(response))
+        logger.error("Error : Request creation")
+        logger.error(str(response))
         return 0
 
 
