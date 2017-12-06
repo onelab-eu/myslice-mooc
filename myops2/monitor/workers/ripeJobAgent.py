@@ -54,8 +54,8 @@ def createRequest(source, request, job, input):
         input.put((response['measurements'][0], job, now))
         return 1
     else:
-        logger.info("Error : Request creation")
-        logger.info(str(response))
+        logger.error("Error : Request creation")
+        logger.error(str(response))
         return 0
 
 

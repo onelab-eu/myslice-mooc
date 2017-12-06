@@ -48,6 +48,17 @@ def rethinkdb_connect():
 def rerun_jobs():
     pass
 
+def get_changes(c, input, ripeInput, job):
+    feed = r.table('jobs').changes().run(c)
+    for change in feed:
+         job = change["new_val"]
+         if job is not None:
+             if (job['jobstatus'] == 'waiting'):
+                 if job["type"] == "ripe":
+                     ripeInput.put(job['id'])
+                 else:
+                     input.put(job['id'])
+
 if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, receive_signal)
@@ -92,7 +103,7 @@ if __name__ == '__main__':
 
     # mooc threads
     threads = []
-    for y in range(50):
+    for y in range(100):
         t = threading.Thread(target=process_job, args=(y, input, semaphore_map))
         t.daemon = True
         threads.append(t)
@@ -106,12 +117,15 @@ if __name__ == '__main__':
 
 
     # change feed
-    feed = r.table('jobs').changes().run(c)
+    try:
+        get_changes(c, input, ripeInput, job)
+    except r.ReqlDriverError as e:
+        print "************************"
+        print e
+        print "************************"
+        c = rethinkdb_connect()
+        get_changes(c, input, ripeInput, job)
 
-    for change in feed:
-         job = change["new_val"]
-         if (job['jobstatus'] == 'waiting'):
-             if job["type"] == "ripe":
-                 ripeInput.put(job['id'])
-             else:
-                 input.put(job['id'])
+
+
+
