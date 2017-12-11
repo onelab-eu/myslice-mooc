@@ -5,6 +5,8 @@ import sched, time
 import sys, getopt
 import threading
 import random
+import signal
+import logging	
 import rethinkdb as r
 from datetime import datetime
 
@@ -154,6 +156,14 @@ def start():
 #                   }]
 # }
 
+def receive_signal(signum, stack):
+    raise SystemExit('Exiting')
+
 if __name__ == '__main__':
+
+    signal.signal(signal.SIGINT, receive_signal)
+    signal.signal(signal.SIGTERM, receive_signal)
+    signal.signal(signal.SIGHUP, receive_signal)
     start()
+ 
 

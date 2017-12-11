@@ -36,7 +36,7 @@ def createSource(nodeID):
 def createRequest(source, request, job, input):
     now = datetime.utcnow()
     atlas_request = AtlasCreateRequest(
-        start_time=now,
+        start_time=now+timedelta(minutes=6),
         key=ATLAS_API_KEY,
         measurements=[request],
         response_timeout = 15,
