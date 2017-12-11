@@ -48,7 +48,7 @@ def rethinkdb_connect():
 def rerun_jobs():
     pass
 
-def get_changes(c, input, ripeInput, job):
+def get_changes(c, input, ripeInput):
     feed = r.table('jobs').changes().run(c)
     for change in feed:
          job = change["new_val"]
@@ -118,13 +118,13 @@ if __name__ == '__main__':
 
     # change feed
     try:
-        get_changes(c, input, ripeInput, job)
+        get_changes(c, input, ripeInput)
     except r.ReqlDriverError as e:
         print "************************"
         print e
         print "************************"
         c = rethinkdb_connect()
-        get_changes(c, input, ripeInput, job)
+        get_changes(c, input, ripeInput)
 
 
 

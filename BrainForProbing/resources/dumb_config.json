@@ -1,14 +1,18 @@
 [{
-  "type": "ripe",
+  "type": "ple",
 
   "sources": [
-     33925
-
+     "ple1.cesnet.cz",
+  "netissime1.planet-lab.eu",
+  "kulcha.mimuw.edu.pl",
+  "iraplab1.iralab.uni-karlsruhe.de"
   ],
 
   "destinations": [
-    "google.fr"
-
+    "2.22.238.7",
+  "2.22.240.10",
+  "2.23.128.40",
+  "2.23.144.29"
   ],
 
   "commands": [

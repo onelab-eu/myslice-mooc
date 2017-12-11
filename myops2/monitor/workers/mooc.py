@@ -110,17 +110,18 @@ def process_job(num, input, semaphore_map):
         logger.info("Job: %s" % (j,))
 
         r.table('jobs').get(job).update({
-            'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+            'started': r.expr(datetime.now(r.make_timezone('01:00'))),
             'jobstatus': 'running',
             'message': 'executing job'
         }).run(c)
+
 
         #result = remote.setup(j['node'],semaphore_map)
         #if not result['status'] :
 	if not True:
             logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
             upd = {
-                'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                 'jobstatus': 'error',
                 'message': 'node not reachable',
                 'returnstatus': 1,
@@ -142,7 +143,7 @@ def process_job(num, input, semaphore_map):
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': 'error',
                         'message': 'job error',
                         'returnstatus': 1,
@@ -152,7 +153,7 @@ def process_job(num, input, semaphore_map):
                     logger.error("execution error %s" % (msg))
                 else:
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': ret['jobstatus'],
                         'message': ret['message'],
                         'returnstatus': ret['returnstatus'],
@@ -171,7 +172,7 @@ def process_job(num, input, semaphore_map):
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': 'error',
                         'message': 'job error',
                         'returnstatus': 1,
@@ -181,7 +182,7 @@ def process_job(num, input, semaphore_map):
                     logger.error("execution error %s" % (msg))
                 else:
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': ret['jobstatus'],
                         'message': ret['message'],
                         'returnstatus': ret['returnstatus'],
@@ -200,7 +201,7 @@ def process_job(num, input, semaphore_map):
 
                     logger.error("%s : Failed SSH access (%s)" % (j['parameters']['dst'], result_dst['message']))
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': 'error',
                         'message': 'job error',
                         'returnstatus': 1,
@@ -225,7 +226,7 @@ def process_job(num, input, semaphore_map):
                         ret = remote_worker(j['parameters']['dst'], remote_command_client)
                     except Exception, msg:
                         upd = {
-                            'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                            'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                             'jobstatus': 'error',
                             'message': 'job error',
                             'returnstatus': 1,
@@ -235,7 +236,7 @@ def process_job(num, input, semaphore_map):
                         logger.error("execution error %s" % (msg))
                     else:
                         upd = {
-                            'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                            'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                             'jobstatus': ret['jobstatus'],
                             'message': ret['message'],
                             'returnstatus': ret['returnstatus'],
@@ -254,7 +255,7 @@ def process_job(num, input, semaphore_map):
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': 'error',
                         'message': 'job error',
                         'returnstatus': 1,
@@ -264,7 +265,7 @@ def process_job(num, input, semaphore_map):
                     logger.error("execution error %s" % (msg))
                 else:
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': ret['jobstatus'],
                         'message': ret['message'],
                         'returnstatus': ret['returnstatus'],
@@ -282,7 +283,7 @@ def process_job(num, input, semaphore_map):
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': 'error',
                         'message': 'job error',
                         'returnstatus': 1,
@@ -292,7 +293,7 @@ def process_job(num, input, semaphore_map):
                     logger.error("execution error %s" % (msg))
                 else:
                     upd = {
-                        'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                         'jobstatus': ret['jobstatus'],
                         'message': ret['message'],
                         'returnstatus': ret['returnstatus'],
@@ -302,7 +303,7 @@ def process_job(num, input, semaphore_map):
                     logger.info("Command executed, result: %s" % (upd))
             else :
                 upd = {
-                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                     'jobstatus': 'error',
                     'message': 'job error',
                     'returnstatus': 1,
