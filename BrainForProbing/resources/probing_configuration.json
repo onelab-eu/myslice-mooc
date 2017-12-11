@@ -17,21 +17,21 @@
 "ple2.cesnet.cz",
 "netissime1.planet-lab.eu",
 "netissime2.planet-lab.eu",
-    "chronos.disy.inf.uni-konstanz.de",
-    "iraplab1.iralab.uni-karlsruhe.de",
-    "iraplab2.iralab.uni-karlsruhe.de",
-    "dplanet1.uoc.edu",
-    "kulcha.mimuw.edu.pl",
-    "planetlab-2.cs.ucy.ac.cy",
-    "planetlab1.ifi.uio.no",
-    "planetlab2.informatik.uni-goettingen.de",
-    "planetlab2.upm.ro",
-    "planetvs2.informatik.uni-stuttgart.de",
-    "puri.mimuw.edu.pl",
-    "ple44.planet-lab.eu",
-    "stella.planetlab.ntua.gr"
-
-
+"chronos.disy.inf.uni-konstanz.de",
+"iraplab1.iralab.uni-karlsruhe.de",
+"iraplab2.iralab.uni-karlsruhe.de",
+"dplanet1.uoc.edu",
+"kulcha.mimuw.edu.pl",
+"planetlab-2.cs.ucy.ac.cy",
+"planetlab1.ifi.uio.no",
+"planetlab2.informatik.uni-goettingen.de",
+"planetlab2.upm.ro",
+"planetvs2.informatik.uni-stuttgart.de",
+"puri.mimuw.edu.pl",
+"ple44.planet-lab.eu",
+"stella.planetlab.ntua.gr",
+"planet3.cs.huji.ac.il",
+"planet4.cs.huji.ac.il"
   ],
   "destinations": [
         "pl2.tailab.eu",
@@ -208,11 +208,6 @@
       "frequency": 3600 
     }
   ]
-
-
-
-
-
 }
 ]
 

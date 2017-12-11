@@ -8,7 +8,7 @@ import random
 import signal
 import logging	
 import rethinkdb as r
-from datetime import date, datetime
+from datetime import datetime
 
 #server url
 db_host = "localhost"
@@ -20,6 +20,7 @@ db_port = 28015
 def startSendRequestTask(body):
     #r = requests.post(serverUrl, json=body)
     r.raise_for_status()
+    date = datetime.now(r.make_timezone('01:00'))
 
 def start():
     conn = r.connect(db_host, db_port)
@@ -50,62 +51,62 @@ def start():
                             #filteredDst = experiment["filterDst"]
                             #####################################
                             if command == "traceroute":
-                                body = '{' \
-                                       '"node": "'+source+'",' \
-                                       '"type":"ple",' \
-                                       '"command": "'+command+'",' \
-                                       '"parameters": { ' \
-                                       '"dst": "'+destination+'", ' \
-                                       '"arg": "-n"' \
-                                       '},' \
-                                       '"jobstatus": "waiting", ' \
-                                       '"message": "waiting to be executed", ' \
-                                       '"created":"' + datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')+'", ' \
-                                       '"started": "", ' \
-                                       '"completed": "", ' \
-                                       '"returnstatus": "", ' \
-                                       '"stdout": "", ' \
-                                       '"stderr": "" ' \
-                                       '}'
+                                body = {
+                                        "node": source,
+                                        "type":"ple",
+                                        "command": command,
+                                        "parameters": {
+                                        "dst": destination,
+                                        "arg": "-n"
+                                        },
+                                        "jobstatus": "waiting",
+                                        "message": "waiting to be executed",
+                                        "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                                        "started": "",
+                                        "completed": "",
+                                        "returnstatus": "",
+                                        "stdout": "",
+                                        "stderr": ""
+                                        }
                             elif command == "paris-traceroute":
                                 ts = time.time()
 
                                 if type == "ple":
-                                    body = '{' \
-                                           '"node": "'+source+'",' \
-                                           '"type":"ple",' \
-                                           '"command": "'+command+'",' \
-                                           '"parameters": { ' \
-                                           '"dst": "'+destination+'", ' \
-                                           '"arg": "-amda -n -Fripe"' \
-                                           '},' \
-                                           '"jobstatus": "waiting", ' \
-                                           '"message": "waiting to be executed", ' \
-                                           '"created":"' + datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')+'", ' \
-                                           '"started": "", ' \
-                                           '"completed": "", ' \
-                                           '"returnstatus": "", ' \
-                                           '"stdout": "", ' \
-                                           '"stderr": "" ' \
-                                           '}'
+                                    body = {
+                                           "node": source,
+                                           "type":"ple",
+                                           "command": command,
+                                           "parameters": {
+                                           "dst": destination,
+                                           "arg": "-amda -n -Fripe"
+                                           },
+                                           "jobstatus": "waiting",
+                                           "message": "waiting to be executed",
+                                           "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                                           "started": "",
+                                           "completed": "",
+                                           "returnstatus": "",
+                                           "stdout": "",
+                                           "stderr": ""
+                                           }
                                 elif type == "ripe":
-                                    body = '{' \
-                                           '"node": '+str(source)+',' \
-                                           '"type":"ripe",' \
-                                           '"command": "traceroute",' \
-                                           '"parameters": { ' \
-                                           '"dst": "'+destination+'", ' \
-                                           '"arg": "-n"' \
-                                           '},' \
-                                           '"jobstatus": "waiting", ' \
-                                           '"message": "waiting to be executed", ' \
-                                           '"created":"' + datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')+'", ' \
-                                           '"started": "", ' \
-                                           '"completed": "", ' \
-                                           '"returnstatus": "", ' \
-                                           '"stdout": "", ' \
-                                           '"stderr": "" ' \
-                                           '}'
+                                    body = {
+                                           "node": source,
+                                           "type":"ripe",
+                                           "command": command,
+                                           "parameters": {
+                                           "dst": destination,
+                                           "arg": "-n"
+                                           },
+                                           "jobstatus": "waiting",
+                                           "message": "waiting to be executed",
+                                           "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                                           "started": "",
+                                           "completed": "",
+                                           "returnstatus": "",
+                                           "stdout": "",
+                                           "stderr": ""
+                                           }
 
                             elif command == "ping":
                                 body = '[' \
@@ -120,7 +121,7 @@ def start():
                             else:
                                 raise Exception("Unknown command in your config_file")
                             #frequency = experiment["frequency"]
-                            jsonBodies.append(json.loads(body))
+                            jsonBodies.append(body)
 
 
 
