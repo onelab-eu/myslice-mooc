@@ -115,16 +115,38 @@ if __name__ == '__main__':
         threads.append(t)
         t.start()
 
+    while True:
+        conn = rethinkdb_connect()
+        feed = r.table('jobs').changes().run(conn)
 
-    # change feed
-    try:
-        get_changes(c, input, ripeInput)
-    except r.ReqlDriverError as e:
-        print "************************"
-        print e
-        print "************************"
-        c = rethinkdb_connect()
-        get_changes(c, input, ripeInput)
+        while True:
+            try:
+                change = feed.next()
+                job = change["new_val"]
+                if job is not None:
+                    if (job['jobstatus'] == 'waiting'):
+                        if job["type"] == "ripe":
+                            ripeInput.put(job['id'])
+                        else:
+                            input.put(job['id'])
+            except RqlTimeoutError:
+                feed.close()
+                conn.close(noreply_wait=False)
+                logger.warn("connection may not be alive, reconnecting...")
+                del conn
+                del feed
+                break
+
+
+    # # change feed
+    # try:
+    #     get_changes(c, input, ripeInput)
+    # except r.ReqlDriverError as e:
+    #     print "************************"
+    #     print e
+    #     print "************************"
+    #     c = rethinkdb_connect()
+    #     get_changes(c, input, ripeInput)
 
 
 
