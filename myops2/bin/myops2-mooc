@@ -129,10 +129,13 @@ if __name__ == '__main__':
                             ripeInput.put(job['id'])
                         else:
                             input.put(job['id'])
-            except RqlTimeoutError:
+            except r.RqlDriverError as e:
+		print "****************************"
+		print e
+		print "****************************"
                 feed.close()
                 conn.close(noreply_wait=False)
-                logger.warn("connection may not be alive, reconnecting...")
+                logger.error("connection may not be alive, reconnecting...")
                 del conn
                 del feed
                 break
