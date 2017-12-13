@@ -134,7 +134,7 @@ def connect(hostname, semaphore_map):
     try:
         semaphore = semaphore_map[hostname]
         with semaphore:
-            time.sleep(0.25)
+            time.sleep(0.1)
             ssh.connect(hostname=hostname, username=username, key_filename=rsa_private_key)
     except BadHostKeyException as e:
         logger.error(e)
