@@ -77,7 +77,7 @@ def createMeasurement(c, source, dest, type, job, input):
 
     if msm == "" or createRequest(source, msm, job, input) == 0:
         r.table('jobs').get(job).update({
-            'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+            'started': r.expr(datetime.now(r.make_timezone('01:00'))),
             'jobstatus': 'error',
             'message': 'Cannot create request'
         }).run(c)
@@ -142,7 +142,7 @@ def waitForResults(id, input):
                 # Stocker messag erreur
                 logger.info("Result fetcher " + str(id) + ": measurement " + str(j_info[0]) + " can't be fetched")
                 r.table('jobs').get(j_info[1]).update({
-                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                     'jobstatus': 'error',
                     'message': response[0]
                 }).run(c)
@@ -159,7 +159,7 @@ def waitForResults(id, input):
                     response) + "\n")
 
                 r.table('jobs').get(j_info[1]).update({
-                    'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                    'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                     'jobstatus': 'finished',
                     'message': 'Done',
                     'stdout': str(response)
@@ -241,7 +241,7 @@ def ripe_process_job(num, input):
 
 
             r.table('jobs').get(job).update({
-                'started': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'started': r.expr(datetime.now(r.make_timezone('01:00'))),
                 'jobstatus': 'running',
                 'message': 'executing job'
             }).run(c)
@@ -253,7 +253,7 @@ def ripe_process_job(num, input):
         else:
             logger.info("Job: %s measurement type unknown" % (job,))
             r.table('jobs').get(job).update({
-                'completed': datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S'),
+                'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                 'jobstatus': 'error',
                 'message': 'measurement type unknown'
             }).run(c)

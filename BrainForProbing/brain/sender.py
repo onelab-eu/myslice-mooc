@@ -91,9 +91,9 @@ def start():
                                            }
                                 elif type == "ripe":
                                     body = {
-                                           "node": source,
+                                           "node": str(source),
                                            "type":"ripe",
-                                           "command": command,
+                                           "command": "traceroute",
                                            "parameters": {
                                            "dst": destination,
                                            "arg": "-n"
