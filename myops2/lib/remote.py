@@ -10,7 +10,8 @@ import re
 
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
-
+import os
+from scp import SCPClient
 #logging.basicConfig(level=logging.DEBUG,
 #                   format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 #                  datefmt="%Y-%m-%d %H:%M:%S")
@@ -149,17 +150,36 @@ def connect(hostname, semaphore_map):
 
     return ssh
 
-def execute(hostname, command, semaphore_map):
+def execute(num, hostname, command, destinations, semaphore_map):
 
     result = ''
     output = ''
 
     ssh = connect(hostname, semaphore_map)
 
+    scp = SCPClient(ssh.get_transport())
+
+
+    destinations_tmp_file = "/tmp/destinations"+ str(num)
+    # Write the destinations into a file and copy it
+    with open(destinations_tmp_file, "w") as destinations_file:
+        for destination in destinations:
+            destinations_file.write(destination + "\n")
+
+
+    # Copy that file on the node
+    # scp_destinations_command = "scp -oStrictHostKeyChecking=no "+ destinations_tmp_file + " upmc_kvermeulen@"+ hostname +":/tmp/"
+    # os.system(scp_destinations_command)
+    scp.put(destinations_tmp_file, remote_path='/tmp/')
+
+    scp.put("../scripts/paris-traceroute.py" , remote_path='/home/upmc_kvermeulen/.myops2')
+
+    # scp_paris_traceroute_py_command = "scp -oStrictHostKeyChecking=no ../scripts/paris-traceroute.py " + " upmc_kvermeulen@"+ hostname +":/home/upmc_kvermeulen/.myops2/"
+    # os.system(scp_paris_traceroute_py_command)
     # Send the command (non-blocking)
     logger.info("executing %s", (command,))
     try:
-	stdin, stdout, stderr = ssh.exec_command(command)
+	    stdin, stdout, stderr = ssh.exec_command(command + " " + str(num))
     except SSHException as e:
         print e
 	pass
@@ -181,12 +201,12 @@ def execute(hostname, command, semaphore_map):
 
     return output
 
-def script(hostname, script, semaphore_map):
+def script(num, hostname, script, destinations, semaphore_map):
     '''
     Executes a script on the remote node.
     Scripts will return a json formatted string with result and information
     '''
-    result = execute(hostname, remote_dir + "/" + script, semaphore_map)
+    result = execute(num, hostname, remote_dir + "/" + script, destinations, semaphore_map)
 
     return result
 

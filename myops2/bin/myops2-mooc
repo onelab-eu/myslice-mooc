@@ -59,6 +59,12 @@ def get_changes(c, input, ripeInput):
                  else:
                      input.put(job['id'])
 
+def create_table(c, name):
+    try:
+        r.db(Config.rethinkdb["db"]).table_create(name).run(c)
+    except RqlRuntimeError:
+        logger.info("table jobs already exists")
+
 if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, receive_signal)
@@ -75,11 +81,9 @@ if __name__ == '__main__':
     c = rethinkdb_connect()
 
     # setup
-    try:
-        r.db(Config.rethinkdb["db"]).table_create('jobs').run(c)
-        r.db(Config.rethinkdb["db"]).table_create('results').run(c)
-    except RqlRuntimeError:
-        logger.info("table jobs already exists")
+    create_table(c, "jobs")
+    create_table(c, "errors")
+    create_table(c, "results")
 
     # cleanup, put wait jobs int he queue
     table_jobs = r.table("jobs")
@@ -131,9 +135,9 @@ if __name__ == '__main__':
                         else:
                             input.put(job['id'])
             except r.RqlDriverError as e:
-		print "****************************"
-		print e
-		print "****************************"
+                print "****************************"
+                print e
+                print "****************************"
                 feed.close()
                 conn.close(noreply_wait=False)
                 logger.error("connection may not be alive, reconnecting...")
