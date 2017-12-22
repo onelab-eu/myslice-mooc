@@ -28,6 +28,7 @@ username = config.get('remote','ssh_user')
 rsa_private_key = config.get('remote','ssh_root_key')
 logger.info(rsa_private_key)
 remote_dir = "/home/upmc_kvermeulen/.myops2"
+remote_tmp_dir = "/home/upmc_kvermeulen/tmp"
 local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
 
@@ -82,42 +83,40 @@ def setup(hostname, semaphore_map):
         logger.error('Network error (%s)' % (e))
         return result
 
+    try:
+        sftp = paramiko.SFTPClient.from_transport(transport)
+    except Exception as e:
+        logger.error('SFTP error: {}'.format(e))
 
-    # try:
-    #     sftp = paramiko.SFTPClient.from_transport(transport)
-    # except Exception as e:
-    #     logger.error('SFTP error: {}'.format(e))
-    #     result['message'] = 'SFTP error (%s)' % (e)
-    #     return result
-    #
-    # # try:
-    # #     sftp.chdir(remote_dir)  # Test if remote_path exists
-    # # except IOError:
-    # #     sftp.mkdir(remote_dir)  # Create remote_path
-    # #     sftp.chdir(remote_dir)
-    # #
-    # # for file_name in glob.glob(local_dir + '/*.*'):
-    # #     local_file = os.path.join(local_dir, file_name)
-    # #     remote_file = remote_dir + '/' + os.path.basename(file_name)
-    # #
-    # #     # check if remote file exists
-    # #     try:
-    # #         if sftp.stat(remote_file):
-    # #             local_file_data = open(local_file, "rb").read()
-    # #             remote_file_data = sftp.open(remote_file).read()
-    # #             md1 = hashlib.md5(local_file_data).digest()
-    # #             md2 = hashlib.md5(remote_file_data).digest()
-    # #             if md1 == md2:
-    # #                 pass
-    # #                 #print "UNCHANGED:", os.path.basename(file_name)
-    # #             else:
-    # #                 #print "MODIFIED:", os.path.basename(file_name)
-    # #                 sftp.put(local_file, remote_file)
-    # #     except:
-    # #         #print "NEW: ", os.path.basename(file_name)
-    # #         sftp.put(local_file, remote_file)
-    # #         sftp.chmod(remote_file, 0755)
-    # sftp.close()
+    try:
+        sftp.chdir(remote_dir)  # Test if remote_path exists
+    except IOError:
+        sftp.mkdir(remote_dir)  # Create remote_path
+        sftp.chdir(remote_dir)
+
+    for file_name in glob.glob(local_dir + '/*.*'):
+        local_file = os.path.join(local_dir, file_name)
+        remote_file = remote_dir + '/' + os.path.basename(file_name)
+
+        # check if remote file exists
+        try:
+            if sftp.stat(remote_file):
+                local_file_data = open(local_file, "rb").read()
+                remote_file_data = sftp.open(remote_file).read()
+                md1 = hashlib.md5(local_file_data).digest()
+                md2 = hashlib.md5(remote_file_data).digest()
+                if md1 == md2:
+                    pass
+                    # print "UNCHANGED:", os.path.basename(file_name)
+                else:
+                    # print "MODIFIED:", os.path.basename(file_name)
+                    sftp.put(local_file, remote_file)
+        except:
+            # print "NEW: ", os.path.basename(file_name)
+            sftp.put(local_file, remote_file)
+            sftp.chmod(remote_file, 0755)
+    sftp.close()
+
 
     result['status'] = True
     result['message'] = 'Setup complete'
@@ -159,20 +158,69 @@ def execute(num, hostname, command, destinations, semaphore_map):
 
     scp = SCPClient(ssh.get_transport())
 
-
-    destinations_tmp_file = "/tmp/destinations"+ str(num)
+    destinations_tmp_file = "destinations"+ str(num)
     # Write the destinations into a file and copy it
     with open(destinations_tmp_file, "w") as destinations_file:
         for destination in destinations:
             destinations_file.write(destination + "\n")
 
 
+    try:
+        pkey = paramiko.RSAKey.from_private_key_file(rsa_private_key)
+    except Exception as e:
+        #print 'Failed loading' % (rsa_private_key, e)
+        logger.error('Failed loading key')
+
+    try:
+        transport = paramiko.Transport((hostname, 22))
+    except SSHException as e:
+        # Transport setup error
+        logger.error('Failed SSH connection (%s)' % (e))
+    except Exception as e:
+        logger.error('Transport error (%s)' % (e))
+
+    try:
+        transport.start_client()
+    except SSHException as e:
+        # if negotiation fails (and no event was passed in)
+        logger.error('Failed SSH negotiation (%s)' % (e))
+
+    try:
+        transport.auth_publickey(username, pkey)
+    except BadAuthenticationType as e:
+        # if public-key authentication isn't allowed by the server for this user (and no event was passed in)
+        logger.error('Failed public-key authentication (%s)' % (e))
+    except AuthenticationException as e:
+        # if the authentication failed (and no event was passed in)
+        logger.error('Failed authentication (%s)' % (e))
+    except SSHException as e:
+        # if there was a network error
+        logger.error('Network error (%s)' % (e))
+
+
+    try:
+        sftp = paramiko.SFTPClient.from_transport(transport)
+    except Exception as e:
+        logger.error('SFTP error: {}'.format(e))
+
+    try:
+        sftp.chdir(remote_tmp_dir)  # Test if remote_path exists
+    except IOError:
+        sftp.mkdir(remote_tmp_dir)  # Create remote_path
+        sftp.chdir(remote_tmp_dir)
+
+    try:
+        sftp.put(destinations_tmp_file, remote_tmp_dir + "/"+ destinations_tmp_file)
+    except Exception as e:
+        logger.error("SFTP error (%s)" % (e))
+
+    sftp.close()
     # Copy that file on the node
     # scp_destinations_command = "scp -oStrictHostKeyChecking=no "+ destinations_tmp_file + " upmc_kvermeulen@"+ hostname +":/tmp/"
     # os.system(scp_destinations_command)
-    scp.put(destinations_tmp_file, remote_path='/tmp/')
-
-    scp.put("../scripts/paris-traceroute.py" , remote_path='/home/upmc_kvermeulen/.myops2')
+    # scp.put(destinations_tmp_file, remote_path='/tmp/')
+    #
+    # scp.put("../scripts/paris-traceroute.py" , remote_path='/home/upmc_kvermeulen/.myops2')
 
     # scp_paris_traceroute_py_command = "scp -oStrictHostKeyChecking=no ../scripts/paris-traceroute.py " + " upmc_kvermeulen@"+ hostname +":/home/upmc_kvermeulen/.myops2/"
     # os.system(scp_paris_traceroute_py_command)

@@ -28,7 +28,7 @@ if __name__ == '__main__':
     hostname = arguments[1:]
 
     num = arguments[len(arguments) - 1]
-    destinations_tmp_file = "/tmp/destinations" + str(num)
+    destinations_tmp_file = "/home/upmc_kvermeulen/tmp/destinations" + str(num)
 
     with open(destinations_tmp_file) as destinations:
         for destination in destinations:

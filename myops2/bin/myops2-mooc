@@ -17,8 +17,8 @@ from myops2.monitor.workers.ripeJobAgent import ripe_process_job
 
 logging.basicConfig(level=logging.ERROR,
                     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
-                    datefmt="%Y-%m-%d %H:%M:%S",
-                    filename="/var/log/myops2-mooc.log", filemode="a")
+                    datefmt="%Y-%m-%d %H:%M:%S")
+                    #filename="/var/log/myops2-mooc.log", filemode="a")
 
 logger = logging.getLogger(__name__)
 

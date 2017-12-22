@@ -81,7 +81,7 @@ def start():
                                    "command": command,
                                    "parameters": {
                                    "dst": destinations_to_probe,
-                                   "arg": "-amda -n -Fripe -t14"
+                                   "arg": "-amda -n -Fripe -t15"
                                    },
                                    "jobstatus": "waiting",
                                    "message": "waiting to be executed",
