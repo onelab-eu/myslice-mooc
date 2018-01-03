@@ -362,7 +362,7 @@ def process_job(num, input, semaphore_map):
         for result in results:
             document = r.table('jobs').get(job).run(c)
             document.pop("id", None)
-            document["parameters"]["dst"] = [result["destination"]]
+            document["parameters"]["dst"] = result["destination"]
 
             to_insert = merge_two_dicts(document, result)
             r.table("results").insert(to_insert).run(c)
@@ -370,6 +370,6 @@ def process_job(num, input, semaphore_map):
         for error in errors:
             document = r.table('jobs').get(job).run(c)
             document.pop("id", None)
-            document["parameters"]["dst"] = [error["destination"]]
+            document["parameters"]["dst"] = error["destination"]
             to_insert = merge_two_dicts(document, error)
             r.table("errors").insert(to_insert).run(c)

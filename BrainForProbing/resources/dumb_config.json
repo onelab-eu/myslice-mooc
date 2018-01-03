@@ -2,13 +2,12 @@
   "type": "ple",
 
   "sources": [
-    "iraplab1.iralab.uni-karlsruhe.de"
+"ple42.planet-lab.eu"
   ],
 
   "destinations": [
-"2.16.174.8",
 "google.fr",
-"2.21.192.41"
+    "google.de"
   ],
 
   "commands": [
