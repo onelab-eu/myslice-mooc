@@ -156,8 +156,6 @@ def execute(num, hostname, command, destinations, semaphore_map):
 
     ssh = connect(hostname, semaphore_map)
 
-    scp = SCPClient(ssh.get_transport())
-
     destinations_tmp_file = "destinations"+ str(num)
     # Write the destinations into a file and copy it
     with open(destinations_tmp_file, "w") as destinations_file:
@@ -198,52 +196,52 @@ def execute(num, hostname, command, destinations, semaphore_map):
         logger.error('Network error (%s)' % (e))
 
 
-    try:
-        sftp = paramiko.SFTPClient.from_transport(transport)
-    except Exception as e:
-        logger.error('SFTP error: {}'.format(e))
-
-    try:
-        sftp.chdir(remote_tmp_dir)  # Test if remote_path exists
-    except IOError:
-        sftp.mkdir(remote_tmp_dir)  # Create remote_path
-        sftp.chdir(remote_tmp_dir)
-
-    try:
-        sftp.put(destinations_tmp_file, remote_tmp_dir + "/"+ destinations_tmp_file)
-    except Exception as e:
-        logger.error("SFTP error (%s)" % (e))
-
-    sftp.close()
-    # Copy that file on the node
-    # scp_destinations_command = "scp -oStrictHostKeyChecking=no "+ destinations_tmp_file + " upmc_kvermeulen@"+ hostname +":/tmp/"
-    # os.system(scp_destinations_command)
-    # scp.put(destinations_tmp_file, remote_path='/tmp/')
+    # try:
+    #     sftp = paramiko.SFTPClient.from_transport(transport)
+    # except Exception as e:
+    #     logger.error('SFTP error: {}'.format(e))
     #
-    # scp.put("../scripts/paris-traceroute.py" , remote_path='/home/upmc_kvermeulen/.myops2')
-
-    # scp_paris_traceroute_py_command = "scp -oStrictHostKeyChecking=no ../scripts/paris-traceroute.py " + " upmc_kvermeulen@"+ hostname +":/home/upmc_kvermeulen/.myops2/"
-    # os.system(scp_paris_traceroute_py_command)
-    # Send the command (non-blocking)
-    logger.info("executing %s", (command,))
-    try:
-	    stdin, stdout, stderr = ssh.exec_command(command + " " + str(num))
-    except SSHException as e:
-        print e
-	pass
-    else:
-	
-    # Wait for the command to terminate
-    # while not stdout.channel.exit_status_ready():
-    #     # Only print data if there is data to read in the channel
-    #     if stdout.channel.recv_ready():
-    #         rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
-    #         if len(rl) > 0:
-    #             # Print data from stdout
-    #             result += stdout.channel.recv(1024)
-
-    	output = stdout.read()
-        error = stderr.read()
+    # try:
+    #     sftp.chdir(remote_tmp_dir)  # Test if remote_path exists
+    # except IOError:
+    #     sftp.mkdir(remote_tmp_dir)  # Create remote_path
+    #     sftp.chdir(remote_tmp_dir)
+    #
+    # try:
+    #     sftp.put(destinations_tmp_file, remote_tmp_dir + "/"+ destinations_tmp_file)
+    # except Exception as e:
+    #     logger.error("SFTP error (%s)" % (e))
+    #
+    # sftp.close()
+    # # Copy that file on the node
+    # # scp_destinations_command = "scp -oStrictHostKeyChecking=no "+ destinations_tmp_file + " upmc_kvermeulen@"+ hostname +":/tmp/"
+    # # os.system(scp_destinations_command)
+    # # scp.put(destinations_tmp_file, remote_path='/tmp/')
+    # #
+    # # scp.put("../scripts/paris-traceroute.py" , remote_path='/home/upmc_kvermeulen/.myops2')
+    #
+    # # scp_paris_traceroute_py_command = "scp -oStrictHostKeyChecking=no ../scripts/paris-traceroute.py " + " upmc_kvermeulen@"+ hostname +":/home/upmc_kvermeulen/.myops2/"
+    # # os.system(scp_paris_traceroute_py_command)
+    # # Send the command (non-blocking)
+    # logger.info("executing %s", (command,))
+    # try:
+	 #    stdin, stdout, stderr = ssh.exec_command(command + " " + str(num))
+    # except SSHException as e:
+    #     print e
+    # pass
+    # else:
+    #
+    # # Wait for the command to terminate
+    # # while not stdout.channel.exit_status_ready():
+    # #     # Only print data if there is data to read in the channel
+    # #     if stdout.channel.recv_ready():
+    # #         rl, wl, xl = select.select([stdout.channel], [], [], 0.0)
+    # #         if len(rl) > 0:
+    # #             # Print data from stdout
+    # #             result += stdout.channel.recv(1024)
+    #
+    # 	output = stdout.read()
+    #     error = stderr.read()
 
     ssh.close()
 
