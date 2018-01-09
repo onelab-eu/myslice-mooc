@@ -40,8 +40,8 @@ class TimeoutError(Exception):
     pass
 
 def remote_worker(num, hostname, script, destinations, semaphore_map):
-    # timeout after 15 min
-    signal.alarm(900)
+    # timeout after 2h
+    signal.alarm(7200)
 
     logger.info("Running job '%s' on %s" % (script, hostname))
     ret = {}
