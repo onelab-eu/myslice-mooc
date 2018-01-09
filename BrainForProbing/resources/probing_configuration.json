@@ -12,20 +12,8 @@
 "ple2.cesnet.cz",
 "netissime1.planet-lab.eu",
 "netissime2.planet-lab.eu",
-"dplanet1.uoc.edu",
 "kulcha.mimuw.edu.pl",
-"planetlab2.informatik.uni-goettingen.de",
-"planetlab2.upm.ro",
-"puri.mimuw.edu.pl",
-"planetlab-1.research.netlab.hut.fi",
-"ple1.planet-lab.eu",
-"planetlab1.informatik.uni-goettingen.de",
-"onelab2.pl.sophia.inria.fr",
-"nuc1.planet-lab.eu",
-"planet-lab-node2.netgroup.uniroma2.it",
-"planetlab11.net.in.tum.de",
-"planetlab13.net.in.tum.de",
-"vicky.planetlab.ntua.gr"
+"puri.mimuw.edu.pl"
   ],
   "destinations": [
 "2.17.140.1",

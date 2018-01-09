@@ -2,13 +2,16 @@
   "type" : "ple",
   "sources": [
 "planetlab2.informatik.uni-goettingen.de",
-"iraplab2.iralab.uni-karlsruhe.de",
-"planetvs2.informatik.uni-stuttgart.de",
-"iraplab1.iralab.uni-karlsruhe.de",
-"ple41.planet-lab.eu",
-"planetlab1.ifi.uio.no",
-"ple44.planet-lab.eu",
-"planetlab2.upm.ro"
+"planetlab2.upm.ro",
+"vicky.planetlab.ntua.gr",
+"planetlab1.informatik.uni-goettingen.de",
+"dplanet1.uoc.edu",
+"nuc1.planet-lab.eu",
+"planetlab11.net.in.tum.de",
+"planetlab13.net.in.tum.de",
+"ple1.planet-lab.eu",
+"planet-lab-node2.netgroup.uniroma2.it",
+"onelab2.pl.sophia.inria.fr"
   ],
   "destinations": [
 "2.17.140.1",
