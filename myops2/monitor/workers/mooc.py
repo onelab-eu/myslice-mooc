@@ -39,14 +39,14 @@ signal.signal(signal.SIGALRM, handle_timeout)
 class TimeoutError(Exception):
     pass
 
-def remote_worker(num, hostname, script, destinations, semaphore_map):
+def remote_worker(num, hostname, script, destinations, path_to_dst, semaphore_map):
     # timeout after 2h
     signal.alarm(7200)
 
     logger.info("Running job '%s' on %s" % (script, hostname))
     ret = {}
     try:
-        result = remote.script(num, hostname, script, destinations,  semaphore_map)
+        result = remote.script(num, hostname, script, destinations, path_to_dst, semaphore_map)
     except TimeoutError:
         logger.info("job '%s' timeout on %s" % (script, hostname))
         ret = {
@@ -115,7 +115,7 @@ def process_job(num, input, semaphore_map):
     logger.info("Agent %s starting" % num)
 
     try :
-        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb['db'])
+        c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb["db"])
     except r.RqlDriverError :
         logger.error("Can't connect to RethinkDB")
         raise SystemExit("Can't connect to RethinkDB")
@@ -136,8 +136,10 @@ def process_job(num, input, semaphore_map):
 
         results = []
         errors = []
-        result = remote.setup(j['node'],semaphore_map)
-        if not result['status'] :
+
+        result = remote.setup(j['node'], semaphore_map)
+
+        if not result['status']:
             logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
             upd = {
                 'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
@@ -148,7 +150,7 @@ def process_job(num, input, semaphore_map):
                 'stderr': result['message']
             }
             
-        else :
+        else:
             if not 'arg' in j['parameters']:
                 j['parameters']['arg'] = ""
 
@@ -292,13 +294,15 @@ def process_job(num, input, semaphore_map):
                         'stderr': ret['stderr']
                     }
                     logger.info("Command executed, result: %s" % (upd))
+
             elif j["command"] == "paris-traceroute":
                 command = 'paris-traceroute'
 
                 remote_command = '%s.py %s' % (command, j['parameters']['arg'])
                 destinations   = j['parameters']['dst']
+                path_to_dst    = "/home/upmc_kvermeulen/tmp/"
                 try:
-                    ret = remote_worker(num, j['node'], remote_command, destinations, semaphore_map)
+                    ret = remote_worker(num, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
@@ -340,23 +344,62 @@ def process_job(num, input, semaphore_map):
                             'stderr': "execution error %s" % (msg)
                         }
                         logger.error("execution error %s" % (msg))
-            else :
-                upd = {
-                    'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
-                    'jobstatus': 'error',
-                    'message': 'job error',
-                    'returnstatus': 1,
-                    'stdout': '',
-                    'stderr': 'unknown command'
-                }
-                logger.error("Command %s not found" % (j['command']))
 
+            elif j["command"] == "icmp":
+                command = 'icmp'
 
+                remote_command = '%s.py %s' % (command, j['parameters']['arg'])
+                destinations   = j['parameters']['dst']
+                path_to_dst    = "/home/upmc_kvermeulen/tmp/ip_ids/"
+                try:
+                    ret = remote_worker(num, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
+                except Exception, msg:
+                    logger.error("EXEC error: %s" % (msg,))
+                    upd = {
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "execution error %s" % (msg)
+                    }
+                    logger.error("execution error %s" % (msg))
+                    errors.append(upd)
+                else:
+                    if "results" in ret:
+                        for res in ret["results"]:
+                            upd = {
+                                'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                                'jobstatus': res['jobstatus'],
+                                'message': res['message'],
+                                'returnstatus': res['returnstatus'],
+                                'stdout': res['stdout'],
+                                'stderr': res['stderr'],
+                                "destination" : res["destination"]
+                            }
+                            stderr = res['stderr']
+                            if stderr == "":
+                                logger.info("Command executed, result: %s" % (upd))
+                                results.append(upd)
+                            else:
+                                errors.append(upd)
+                    else:
+                        logger.error("EXEC error: %s" % (msg,))
+                        upd = {
+                            'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                            'jobstatus': 'error',
+                            'message': 'job error',
+                            'returnstatus': 1,
+                            'stdout': '',
+                            'stderr': "execution error %s" % (msg)
+                        }
+                        logger.error("execution error %s" % (msg))
 
         upd = {
                 'jobstatus': 'finished',
                 'message': 'job completed',
             }
+
         r.table('jobs').get(job).update(upd).run(c)
 
         for result in results:

@@ -149,19 +149,20 @@ def connect(hostname, semaphore_map):
 
     return ssh
 
-def execute(num, hostname, command, destinations, semaphore_map):
+def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
 
     result = ''
     output = ''
 
     ssh = connect(hostname, semaphore_map)
 
-
-    destinations_tmp_file = "destinations"+ str(num)
+    destinations_tmp_file = path_to_dst + "destinations" + str(num)
     # Write the destinations into a file and copy it
     with open(destinations_tmp_file, "w") as destinations_file:
         for destination in destinations:
             destinations_file.write(destination + "\n")
+
+
 
 
     try:
@@ -203,15 +204,16 @@ def execute(num, hostname, command, destinations, semaphore_map):
         logger.error('SFTP error: {}'.format(e))
 
     try:
-        sftp.chdir(remote_tmp_dir)  # Test if remote_path exists
+        sftp.chdir(path_to_dst)  # Test if remote_path exists
     except IOError:
-        sftp.mkdir(remote_tmp_dir)  # Create remote_path
-        sftp.chdir(remote_tmp_dir)
+        sftp.mkdir(path_to_dst)  # Create remote_path
+        sftp.chdir(path_to_dst)
 
     try:
-        sftp.put(destinations_tmp_file, remote_tmp_dir + "/"+ destinations_tmp_file)
+        sftp.put(destinations_tmp_file, path_to_dst + destinations_tmp_file)
     except Exception as e:
         logger.error("SFTP error (%s)" % (e))
+
 
     sftp.close()
     # Copy that file on the node
@@ -248,12 +250,12 @@ def execute(num, hostname, command, destinations, semaphore_map):
 
     return output
 
-def script(num, hostname, script, destinations, semaphore_map):
+def script(num, hostname, script, destinations, path_to_dst, semaphore_map):
     '''
     Executes a script on the remote node.
     Scripts will return a json formatted string with result and information
     '''
-    result = execute(num, hostname, remote_dir + "/" + script, destinations, semaphore_map)
+    result = execute(num, hostname, remote_dir + "/" + script, destinations, path_to_dst, semaphore_map)
 
     return result
 

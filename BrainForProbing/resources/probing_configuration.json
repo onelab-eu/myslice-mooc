@@ -2,7 +2,6 @@
   "type" : "ple",
   "sources": [
 "pl2.prakinf.tu-ilmenau.de",
-"ple3.planet-lab.eu",
 "mars.planetlab.haw-hamburg.de",
 "ple42.planet-lab.eu",
 "node2.planetlab.uni-luebeck.de",
@@ -10,10 +9,9 @@
 "ple43.planet-lab.eu",
 "ple1.cesnet.cz",
 "ple2.cesnet.cz",
-"netissime1.planet-lab.eu",
-"netissime2.planet-lab.eu",
 "kulcha.mimuw.edu.pl",
-"puri.mimuw.edu.pl"
+"puri.mimuw.edu.pl",
+    "ple44.planet-lab.eu"
   ],
   "destinations": [
 "2.17.140.1",
