@@ -9,8 +9,6 @@ from graph.graph_utils import *
 import re
 from datetime import datetime, timedelta
 
-
-
 if __name__ == '__main__':
 
     localport = 28015
