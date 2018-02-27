@@ -73,7 +73,7 @@ if __name__ == '__main__':
                         ips_from_db.append(ip[v])
             if len(ips_from_db) > 15:
                 body = {
-                    "node": "ple1.cesnet.cz",
+                    "node": random.choice(sources),
                     "type": "ple",
                     "command": "icmp",
                     "parameters": {
