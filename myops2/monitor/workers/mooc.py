@@ -26,20 +26,25 @@ import errno
 logger = logging.getLogger(__name__)
 
 # Helper function merge dictionnaries
+
 def merge_two_dicts(x, y):
     z = x.copy()   # start with x's keys and values
     z.update(y)    # modifies z with y's keys and values & returns None
     return z
 
+
 def handle_timeout(signum, frame):
     raise TimeoutError(os.strerror(errno.ETIME))
 
+
 signal.signal(signal.SIGALRM, handle_timeout)
+
 
 class TimeoutError(Exception):
     pass
 
-def remote_worker(num, hostname, script, destinations, path_to_dst, semaphore_map):
+
+def remote_worker(num, command, hostname, script, destinations, path_to_dst, semaphore_map):
     # timeout after 2h
     signal.alarm(7200)
 
@@ -66,40 +71,43 @@ def remote_worker(num, hostname, script, destinations, path_to_dst, semaphore_ma
             'stderr': ''
         }
     else:
-        logger.info("job '%s' completed on %s" % (script, hostname))
-        results = []
-        list_result = json.loads(result)
-        for r in list_result:
-            try:
-                logger.info("JSON: %s", result)
+        if command == "paris-traceroute":
+            logger.info("job '%s' completed on %s" % (script, hostname))
+            results = []
+            list_result = json.loads(result)
+            for r in list_result:
+                try:
+                    logger.info("JSON: %s", result)
 
-            except Exception, msg:
-                logger.error("JSON error: %s" % (msg,))
-                it = {
-                    'jobstatus': 'error',
-                    'message': 'job error',
-                    'returnstatus': 1,
-                    'stdout': '',
-                    'stderr': '',
-                    "destination": r["destination"]
-                }
-                results.append(it)
-            else:
-                it = {
-                    'jobstatus': 'finished',
-                    'message': 'job completed',
-                    'returnstatus': r['returnstatus'],
-                    'stdout': r['stdout'],
-                    'stderr': r['stderr'],
-                    "destination": r["destination"]
-                }
-                results.append(it)
-        ret = {
-            'jobstatus': 'finished',
-            'message': 'job completed',
-            'returnstatus': 0,
-            "results": results
-        }
+                except Exception, msg:
+                    logger.error("JSON error: %s" % (msg,))
+                    it = {
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': '',
+                        "destination": r["destination"]
+                    }
+                    results.append(it)
+                else:
+                    it = {
+                        'jobstatus': 'finished',
+                        'message': 'job completed',
+                        'returnstatus': r['returnstatus'],
+                        'stdout': r['stdout'],
+                        'stderr': r['stderr'],
+                        "destination": r["destination"]
+                    }
+                    results.append(it)
+            ret = {
+                'jobstatus': 'finished',
+                'message': 'job completed',
+                'returnstatus': 0,
+                "results": results
+            }
+        elif command == "icmp":
+            return json.loads(result)
     finally:
         signal.alarm(0)
 
@@ -114,7 +122,7 @@ def process_job(num, input, semaphore_map):
 
     logger.info("Agent %s starting" % num)
 
-    try :
+    try:
         c = r.connect(host=Config.rethinkdb["host"], port=Config.rethinkdb["port"], db=Config.rethinkdb["db"])
     except r.RqlDriverError :
         logger.error("Can't connect to RethinkDB")
@@ -302,7 +310,7 @@ def process_job(num, input, semaphore_map):
                 destinations   = j['parameters']['dst']
                 path_to_dst    = "/home/upmc_kvermeulen/tmp/"
                 try:
-                    ret = remote_worker(num, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
+                    ret = remote_worker(num, command, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
@@ -350,9 +358,9 @@ def process_job(num, input, semaphore_map):
 
                 remote_command = '%s.py %s' % (command, j['parameters']['arg'])
                 destinations   = j['parameters']['dst']
-                path_to_dst    = "/home/upmc_kvermeulen/tmp/ip_ids/"
+                path_to_dst    = "/home/upmc_kvermeulen/ip_ids/"
                 try:
-                    ret = remote_worker(num, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
+                    ret = remote_worker(num, command, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
                 except Exception, msg:
                     logger.error("EXEC error: %s" % (msg,))
                     upd = {
@@ -366,34 +374,18 @@ def process_job(num, input, semaphore_map):
                     logger.error("execution error %s" % (msg))
                     errors.append(upd)
                 else:
-                    if "results" in ret:
-                        for res in ret["results"]:
-                            upd = {
-                                'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
-                                'jobstatus': res['jobstatus'],
-                                'message': res['message'],
-                                'returnstatus': res['returnstatus'],
-                                'stdout': res['stdout'],
-                                'stderr': res['stderr'],
-                                "destination" : res["destination"]
-                            }
-                            stderr = res['stderr']
-                            if stderr == "":
-                                logger.info("Command executed, result: %s" % (upd))
-                                results.append(upd)
-                            else:
-                                errors.append(upd)
-                    else:
-                        logger.error("EXEC error: %s" % (msg,))
+
+                    for res in ret:
                         upd = {
                             'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
-                            'jobstatus': 'error',
-                            'message': 'job error',
-                            'returnstatus': 1,
-                            'stdout': '',
-                            'stderr': "execution error %s" % (msg)
+                             "node": res["node"],
+                        "destination": res["destination"],
+                        "sent": r.expr(res["sent"]),
+                        "received": r.expr(res["received"]),
+                        "ip_id": res["ip_id"],
+                        "started": r.expr(res["started"])
                         }
-                        logger.error("execution error %s" % (msg))
+                        results.append(upd)
 
         upd = {
                 'jobstatus': 'finished',
@@ -408,7 +400,15 @@ def process_job(num, input, semaphore_map):
             document["parameters"]["dst"] = result["destination"]
 
             to_insert = merge_two_dicts(document, result)
-            r.table("results").insert(to_insert).run(c)
+
+            table = ""
+
+            if j["command"] == "icmp":
+                table = "ip_ids"
+            elif j["command"] == "paris-traceroute":
+                table = "results"
+
+            r.table(table).insert(to_insert).run(c)
 
         for error in errors:
             document = r.table('jobs').get(job).run(c)

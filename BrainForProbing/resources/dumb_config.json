@@ -2,12 +2,14 @@
   "type": "ple",
 
   "sources": [
-"ple42.planet-lab.eu"
+"ple1.cesnet.cz"
   ],
 
   "destinations": [
 "google.fr",
-    "google.de"
+    "google.de",
+    "google.it",
+    "2.17.140.1"
   ],
 
   "commands": [

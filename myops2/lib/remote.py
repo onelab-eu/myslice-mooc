@@ -210,7 +210,7 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
         sftp.chdir(path_to_dst)
 
     try:
-        sftp.put(destinations_tmp_file, path_to_dst + destinations_tmp_file)
+        sftp.put(destinations_tmp_file, destinations_tmp_file)
     except Exception as e:
         logger.error("SFTP error (%s)" % (e))
 
@@ -228,7 +228,7 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     # Send the command (non-blocking)
     logger.info("executing %s", (command,))
     try:
-	    stdin, stdout, stderr = ssh.exec_command(command + " " + str(num))
+	    stdin, stdout, stderr = ssh.exec_command("sudo " + command + " " + str(num))
     except SSHException as e:
         print e
 	pass
