@@ -8,6 +8,7 @@ from graph.graph_builder import *
 from graph.graph_utils import *
 import re
 from datetime import datetime, timedelta
+import random
 
 if __name__ == '__main__':
 
@@ -54,42 +55,51 @@ if __name__ == '__main__':
         g = Graph()
 
         feed = r.db(db_name).table('results').changes().run(conn)
+
         for s_d_snapshot in feed:
-            g = compute_graph_from_db_s_d(s_d_snapshot["new_val"], nslookup, as_prefixes, options)
-            if len(g.get_vertices() != 0):
-                ip = g.vertex_properties["ip_address"]
+            try:
+                g = compute_graph_from_db_s_d(s_d_snapshot["new_val"], nslookup, as_prefixes, options)
+                if len(g.get_vertices() != 0):
+                    ip = g.vertex_properties["ip_address"]
 
-                for v in g.vertices():
-                    if is_ip_in_as(ip[v], as_prefixes):  # if in Telia's AS -> we put the ip in the list
-                        if ip[v] in already_in_list:
-                            continue
-                        if re.match(r'^1/16:', ip[v]) is not None:
-                            continue
+                    for v in g.vertices():
+                        if is_ip_in_as(ip[v], as_prefixes):  # if in Telia's AS -> we put the ip in the list
+                            if ip[v] in already_in_list:
+                                continue
+                            if re.match(r'^1/16:', ip[v]) is not None:
+                                continue
+                            if ip[v] == "* * *":
+                                continue
 
-                        already_in_list.append(ip[v])
+                            already_in_list.append(ip[v])
 
-                        ips_from_db.append(ip[v])
-            if len(ips_from_db) > 15:
-                body = {
-                    "node": random.choice(sources),
-                    "type": "ple",
-                    "command": "icmp",
-                    "parameters": {
-                        "dst": ips_from_db[:],
-                        "arg": ""
-                    },
-                    "jobstatus": "waiting",
-                    "message": "waiting to be executed",
-                    "created": r.expr(datetime.now(r.make_timezone('01:00'))),
-                    "started": "",
-                    "completed": "",
-                    "returnstatus": "",
-                    "stdout": "",
-                    "stderr": ""
-                }
-                ips_from_db[:] = []
-                r.db(db_name).table('jobs').insert(body).run(conn)
+                            ips_from_db.append(ip[v])
 
+                if len(ips_from_db) > 15:
+
+                    body = {
+                        "node": random.choice(sources),
+                        "type": "ple",
+                        "command": "icmp",
+                        "parameters": {
+                            "dst": ips_from_db[:],
+                            "arg": ""
+                        },
+                        "jobstatus": "waiting",
+                        "message": "waiting to be executed",
+                        "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                        "started": "",
+                        "completed": "",
+                        "returnstatus": "",
+                        "stdout": "",
+                        "stderr": ""
+                    }
+
+                    ips_from_db[:] = []
+                    r.db(db_name).table('jobs').insert(body).run(conn)
+
+            except Exception:
+                continue
     finally:
         print "[Extract IP'S] Done !"
 

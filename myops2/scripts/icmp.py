@@ -3,12 +3,9 @@
 from scapy.all import *
 import sys
 import time
-import rethinkdb as r
-from rethinkdb.errors import RqlRuntimeError
-import logging
 from datetime import datetime, date
 import json
-import os
+
 
 def json_serial(obj):
     """JSON serializer for objects not serializable by default json code"""
