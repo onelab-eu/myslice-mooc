@@ -306,6 +306,8 @@ def process_job(num, input, semaphore_map):
             elif j["command"] == "paris-traceroute":
                 command = 'paris-traceroute'
 
+                # DONT FORGET TO CREATE /home/upmc_kvermeulen  /home/upmc_kvermeulen/tmp and /home/upmc_kvermeulen/ip_ids directories
+
                 remote_command = '%s.py %s' % (command, j['parameters']['arg'])
                 destinations   = j['parameters']['dst']
                 path_to_dst    = "/home/upmc_kvermeulen/tmp/"
@@ -358,6 +360,9 @@ def process_job(num, input, semaphore_map):
 
                 remote_command = '%s.py %s' % (command, j['parameters']['arg'])
                 destinations   = j['parameters']['dst']
+
+                # DONT FORGET TO CREATE /home/upmc_kvermeulen  /home/upmc_kvermeulen/tmp and /home/upmc_kvermeulen/ip_ids directories
+
                 path_to_dst    = "/home/upmc_kvermeulen/ip_ids/"
                 try:
                     ret = remote_worker(num, command, j['node'], remote_command, destinations, path_to_dst, semaphore_map)

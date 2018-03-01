@@ -214,8 +214,8 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     except Exception as e:
         logger.error("SFTP error (%s)" % (e))
 
-
     sftp.close()
+
     # Copy that file on the node
     # scp_destinations_command = "scp -oStrictHostKeyChecking=no "+ destinations_tmp_file + " upmc_kvermeulen@"+ hostname +":/tmp/"
     # os.system(scp_destinations_command)
@@ -227,11 +227,12 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     # os.system(scp_paris_traceroute_py_command)
     # Send the command (non-blocking)
     logger.info("executing %s", (command,))
+
     try:
-	    stdin, stdout, stderr = ssh.exec_command("sudo " + command + " " + str(num))
+        stdin, stdout, stderr = ssh.exec_command("sudo " + command + " " + str(num))
     except SSHException as e:
         print e
-	pass
+        pass
     else:
 
     # Wait for the command to terminate
@@ -261,6 +262,6 @@ def script(num, hostname, script, destinations, path_to_dst, semaphore_map):
 
 if __name__ == '__main__':
     node = 'ple41.planet-lab.eu'
-    setup(node)
-    #r = script(node, 'networks.sh')
-    #print r
+    setup(node, semaphore_map=True)
+    # r = script(node, 'networks.sh')
+    # print r

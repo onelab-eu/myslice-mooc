@@ -118,11 +118,11 @@ if __name__ == '__main__':
         threads.append(t)
         t.start()
     
-    for y in range(25):
-        t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
-        t.daemon = True
-        threads.append(t)
-        t.start()
+    # for y in range(25):
+    #     t = threading.Thread(target=ripe_process_job, args=(y, ripeInput))
+    #     t.daemon = True
+    #     threads.append(t)
+    #     t.start()
 
     while True:
         conn = rethinkdb_connect()

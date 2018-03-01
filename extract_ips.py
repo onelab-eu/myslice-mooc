@@ -10,6 +10,9 @@ import re
 from datetime import datetime, timedelta
 import random
 
+
+# DONT FORGET TO CREATE /home/upmc_kvermeulen  /home/upmc_kvermeulen/tmp and /home/upmc_kvermeulen/ip_ids directories
+
 if __name__ == '__main__':
 
     localport = 28015
@@ -99,6 +102,7 @@ if __name__ == '__main__':
                     r.db(db_name).table('jobs').insert(body).run(conn)
 
             except Exception:
+                print "[Extract ip's] Exception -> Compute Graph"
                 continue
     finally:
         print "[Extract IP'S] Done !"
