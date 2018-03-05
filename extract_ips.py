@@ -54,13 +54,14 @@ if __name__ == '__main__':
         for k in nslookup.keys():  # Ajout des sources dans la liste "sources"
             sources.append(k)
 
-        already_in_list = []
         g = Graph()
 
+        already_in_list = []
         feed = r.db(db_name).table('results').changes().run(conn)
 
         for s_d_snapshot in feed:
             try:
+
                 g = compute_graph_from_db_s_d(s_d_snapshot["new_val"], nslookup, as_prefixes, options)
                 if len(g.get_vertices() != 0):
                     ip = g.vertex_properties["ip_address"]
@@ -77,8 +78,6 @@ if __name__ == '__main__':
                             already_in_list.append(ip[v])
 
                             ips_from_db.append(ip[v])
-
-                if len(ips_from_db) > 15:
 
                     body = {
                         "node": random.choice(sources),
@@ -99,6 +98,7 @@ if __name__ == '__main__':
                     }
 
                     ips_from_db[:] = []
+                    already_in_list[:] = []
                     r.db(db_name).table('jobs').insert(body).run(conn)
 
             except Exception:
