@@ -415,7 +415,10 @@ def process_job(num, input, semaphore_map):
                 table = "results"
                 r.table(table).insert(to_insert).run(c)
 
-                for error in errors:
-                    document["parameters"]["dst"] = error["destination"]
-                    to_insert = merge_two_dicts(document, error)
-                    r.table("errors").insert(to_insert).run(c)
+        if j["command"] == "paris_traceroute":
+            for error in errors:
+                document = r.table('jobs').get(job).run(c)
+                document.pop("id", None)
+                document["parameters"]["dst"] = error["destination"]
+                to_insert = merge_two_dicts(document, error)
+                r.table("errors").insert(to_insert).run(c)
