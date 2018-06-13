@@ -6,11 +6,13 @@
     (c) 2014 - 2015 Ciro Scognamiglio <ciro.scognamiglio@lip6.fr>
 '''
 
+
 import logging
 import time
 import json
 from datetime import datetime
 import Queue
+import scp
 
 import rethinkdb as r
 from rethinkdb.errors import RqlRuntimeError, RqlDriverError
@@ -22,6 +24,9 @@ import threading
 import signal
 import os
 import errno
+import paramiko
+
+from graph_tool.all import *
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +40,13 @@ def merge_two_dicts(x, y):
 
 def handle_timeout(signum, frame):
     raise TimeoutError(os.strerror(errno.ETIME))
+
+def createSSHClient(destination, user, k):
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(destination, port=22, username=user, pkey=k)
+    return client
 
 
 signal.signal(signal.SIGALRM, handle_timeout)
@@ -71,7 +83,7 @@ def remote_worker(num, command, hostname, script, destinations, path_to_dst, sem
             'stderr': ''
         }
     else:
-        if command == "paris-traceroute":
+        if command == "paris-traceroute" or command == "MDALite":
             logger.info("job '%s' completed on %s" % (script, hostname))
             results = []
             list_result = json.loads(result)
@@ -108,6 +120,7 @@ def remote_worker(num, command, hostname, script, destinations, path_to_dst, sem
             }
         elif command == "icmp":
             return json.loads(result)
+
     finally:
         signal.alarm(0)
 
@@ -145,17 +158,17 @@ def process_job(num, input, semaphore_map):
         results = []
         errors = []
 
-        result = remote.setup(j['node'], semaphore_map)
+        result_setup = remote.setup(j['node'], semaphore_map)
 
-        if not result['status']:
-            logger.info("%s : Failed SSH access (%s)" % (j['node'], result['message']))
+        if not result_setup['status']:
+            logger.info("%s : Failed SSH access (%s)" % (j['node'], result_setup['message']))
             upd = {
                 'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
                 'jobstatus': 'error',
                 'message': 'node not reachable',
                 'returnstatus': 1,
                 'stdout': '',
-                'stderr': result['message']
+                'stderr': result_setup['message']
             }
             
         else:
@@ -392,6 +405,52 @@ def process_job(num, input, semaphore_map):
                         }
                         results.append(upd)
 
+            elif j["command"] == "MDALite":
+                command = 'MDALite'
+
+                remote_command = '%s.py %s' % (command, j['parameters']['arg'])
+                destinations   = j['parameters']['dst']
+                path_to_dst    = "/home/upmc_kvermeulen/tmp/"
+                try:
+                    ret = remote_worker(num, command, j['node'], remote_command, destinations, path_to_dst, semaphore_map)
+                except Exception, msg:
+                    logger.error("EXEC error: %s" % (msg,))
+                    upd = {
+                        'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                        'jobstatus': 'error',
+                        'message': 'job error',
+                        'returnstatus': 1,
+                        'stdout': '',
+                        'stderr': "execution error %s" % (msg)
+                    }
+                    logger.error("execution error %s" % (msg))
+                    errors.append(upd)
+                else:
+                    if "results" in ret:
+                        for res in ret["results"]:
+                            upd = {
+                                'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                                'jobstatus': res['jobstatus'],
+                                'message': res['message'],
+                                'returnstatus': res['returnstatus'],
+                                'stdout': res['stdout'],
+                                'stderr': res['stderr'],
+                                "destination": res["destination"]
+                            }
+                            stderr = res['stderr']
+                            results.append(upd)
+                    else:
+                        logger.error("EXEC error: %s" % (msg,))
+                        upd = {
+                            'completed': r.expr(datetime.now(r.make_timezone('01:00'))),
+                            'jobstatus': 'error',
+                            'message': 'job error',
+                            'returnstatus': 1,
+                            'stdout': '',
+                            'stderr': "execution error %s" % (msg)
+                        }
+                        logger.error("execution error %s" % (msg))
+
         upd = {
                 'jobstatus': 'finished',
                 'message': 'job completed',
@@ -411,11 +470,16 @@ def process_job(num, input, semaphore_map):
             if j["command"] == "icmp":
                 table = "ip_ids"
                 r.table(table).insert(to_insert).run(c)
-            elif j["command"] == "paris-traceroute":
+            elif (j["command"] == "paris-traceroute"):
                 table = "results"
                 r.table(table).insert(to_insert).run(c)
+            elif j["command"] == "MDALite":
+                table = "continuous_survey"
+                r.table(table).insert(to_insert).run(c)
 
-        if j["command"] == "paris_traceroute":
+
+
+        if (j["command"] == "paris_traceroute") or (j["command"] == "MDALite"):
             for error in errors:
                 document = r.table('jobs').get(job).run(c)
                 document.pop("id", None)

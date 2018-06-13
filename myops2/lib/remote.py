@@ -7,6 +7,7 @@ import logging
 import threading
 import time
 import re
+import scp
 
 import paramiko
 from paramiko.ssh_exception import BadAuthenticationType, BadHostKeyException, AuthenticationException, SSHException
@@ -20,10 +21,11 @@ logger = logging.getLogger(__name__)
 
 # PlanetLab Lib is required
 from planetlab import config
+from graph_tool.all import *
 
 # static atm
-#username = 'root'
-username = config.get('remote', 'ssh_user')
+username = 'root'
+#username = config.get('remote', 'ssh_user')
 #rsa_private_key = "/root/mooc/rest-api/key/planetlab_root_ssh_key.rsa"
 rsa_private_key = config.get('remote', 'ssh_root_key')
 logger.info(rsa_private_key)
@@ -34,7 +36,7 @@ local_dir = os.path.realpath(os.path.dirname(__file__) + '/../scripts')
 
 def setup(hostname, semaphore_map):
 
-    result = { "status" : False, "message" : None }
+    result = {"status": False, "message": None}
     logger.info("connecting to %s", (hostname,))
 
     try:
@@ -154,6 +156,7 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     result = ''
     output = ''
 
+
     ssh = connect(hostname, semaphore_map)
 
     destinations_tmp_file = path_to_dst + "destinations" + str(num)
@@ -214,6 +217,7 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     except Exception as e:
         logger.error("SFTP error (%s)" % (e))
 
+
     sftp.close()
 
     # Copy that file on the node
@@ -247,6 +251,8 @@ def execute(num, hostname, command, destinations, path_to_dst, semaphore_map):
     	output = stdout.read()
         error = stderr.read()
 
+
+
     ssh.close()
 
     return output
@@ -261,7 +267,7 @@ def script(num, hostname, script, destinations, path_to_dst, semaphore_map):
     return result
 
 if __name__ == '__main__':
-    node = 'ple41.planet-lab.eu'
+    node = 'ple1.planet-lab.eu'
     setup(node, semaphore_map=True)
     # r = script(node, 'networks.sh')
     # print r

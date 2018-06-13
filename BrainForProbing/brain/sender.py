@@ -110,13 +110,29 @@ def start():
                                    "stdout": "",
                                    "stderr": ""
                                    }
+                    elif command == "MDALite":
+                        body = {
+                               "node": str(source),
+                               "type": "ple",
+                               "command": command,
+                               "parameters": {
+                               "dst": destinations_to_probe,
+                               "arg": "-a -A -lerror -o"
+                               },
+                               "jobstatus": "waiting",
+                               "message": "waiting to be executed",
+                               "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                               "started": "",
+                               "completed": "",
+                               "returnstatus": "",
+                               "stdout": "",
+                               "stderr": ""
+                               }
 
                     else:
                         raise Exception("Unknown command in your config_file")
                     #frequency = experiment["frequency"]
                     jsonBodies.append(body)
-
-
 
             # A good bound of the jobs we will have to launch is numberOfCommands*numberOfSrcs*numberOfDestinations
            # pool = ThreadPoolExecutor(len(commands) * len(sources) * len(destinations))

@@ -84,10 +84,12 @@ if __name__ == '__main__':
     create_table(c, "jobs")
     create_table(c, "errors")
     create_table(c, "results")
+    create_table(c, "continuous_survey")
 
-    create_table(c, "ip_ids")
-    create_table(c, "velocities")
-    create_table(c, "alias_resolution")
+    # create_table(c, "check")
+    # create_table(c, "ip_ids")
+    # create_table(c, "velocities")
+    # create_table(c, "alias_resolution")
 
     # cleanup, put wait jobs in the queue
     table_jobs = r.table("jobs")

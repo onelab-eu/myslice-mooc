@@ -12,6 +12,7 @@ import random
 
 
 # DONT FORGET TO CREATE /home/upmc_kvermeulen  /home/upmc_kvermeulen/tmp and /home/upmc_kvermeulen/ip_ids directories
+# ON THE NODE YOU ARE LAUNCHING THIS
 
 if __name__ == '__main__':
 
@@ -61,7 +62,6 @@ if __name__ == '__main__':
 
         for s_d_snapshot in feed:
             try:
-
                 g = compute_graph_from_db_s_d(s_d_snapshot["new_val"], nslookup, as_prefixes, options)
                 if len(g.get_vertices() != 0):
                     ip = g.vertex_properties["ip_address"]
@@ -76,30 +76,31 @@ if __name__ == '__main__':
                                 continue
 
                             already_in_list.append(ip[v])
-
                             ips_from_db.append(ip[v])
 
-                    body = {
-                        "node": random.choice(sources),
-                        "type": "ple",
-                        "command": "icmp",
-                        "parameters": {
-                            "dst": ips_from_db[:],
-                            "arg": ""
-                        },
-                        "jobstatus": "waiting",
-                        "message": "waiting to be executed",
-                        "created": r.expr(datetime.now(r.make_timezone('01:00'))),
-                        "started": "",
-                        "completed": "",
-                        "returnstatus": "",
-                        "stdout": "",
-                        "stderr": ""
-                    }
+                            if len(ips_from_db) > 15:
+                                random_source = random.choice(sources)  # node from where ICMP.py will be launched
 
-                    ips_from_db[:] = []
-                    already_in_list[:] = []
-                    r.db(db_name).table('jobs').insert(body).run(conn)
+                                body = {
+                                    "node": random_source,
+                                    "type": "ple",
+                                    "command": "icmp",
+                                    "parameters": {
+                                        "dst": ips_from_db[:],
+                                        "arg": ""
+                                    },
+                                    "jobstatus": "waiting",
+                                    "message": "waiting to be executed",
+                                    "created": r.expr(datetime.now(r.make_timezone('01:00'))),
+                                    "started": "",
+                                    "completed": "",
+                                    "returnstatus": "",
+                                    "stdout": "",
+                                    "stderr": ""
+                                }
+
+                                ips_from_db[:] = []
+                                r.db(db_name).table('jobs').insert(body).run(conn)
 
             except Exception:
                 print "[Extract ip's] Exception -> Compute Graph"

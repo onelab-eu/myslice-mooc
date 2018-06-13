@@ -1,14 +1,23 @@
 [{
   "type" : "ple",
   "sources": [
+"ple2.hpca.ual.es",
 "pl2.prakinf.tu-ilmenau.de",
 "ple2.planet-lab.eu",
-"ple43.planet-lab.eu",
 "ple1.cesnet.cz",
-"ple2.cesnet.cz",
+"aladdin.planetlab.extranet.uni-passau.de",
 "kulcha.mimuw.edu.pl",
 "puri.mimuw.edu.pl",
-    "ple44.planet-lab.eu"
+"ple44.planet-lab.eu",
+"planet4.cs.huji.ac.il",
+"ple1.planet-lab.eu",
+"pl-node-2.technion.ac.il",
+"planetlab2.upm.ro",
+"ple3.planet-lab.eu",
+"cse-yellow.cse.chalmers.se",
+"pl1.uni-rostock.de",
+"planet2.elte.hu",
+"chronos.disy.inf.uni-konstanz.de"
   ],
   "destinations": [
 "2.17.140.1",
@@ -149,7 +158,7 @@
   ],
   "commands": [
     {
-      "command": "paris-traceroute",
+      "command": "MDALite",
       "options": [],
       "filterSrc": [],
       "filterDst": [],

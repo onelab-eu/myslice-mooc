@@ -2,10 +2,7 @@
   "type" : "ple",
   "sources": [
 "planetlab2.informatik.uni-goettingen.de",
-"vicky.planetlab.ntua.gr",
 "planetlab1.informatik.uni-goettingen.de",
-"dplanet1.uoc.edu",
-"nuc1.planet-lab.eu",
 "planetlab11.net.in.tum.de",
 "planetlab13.net.in.tum.de",
 "ple1.planet-lab.eu",
@@ -151,7 +148,7 @@
   ],
   "commands": [
     {
-      "command": "paris-traceroute",
+      "command": "MDALite",
       "options": [],
       "filterSrc": [],
       "filterDst": [],

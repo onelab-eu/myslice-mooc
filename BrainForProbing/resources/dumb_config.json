@@ -1,21 +1,6 @@
-[{
-  "type": "ple",
-
-  "sources": [
-"ple43.planet-lab.eu"
-  ],
-
-  "destinations": [
-"google.fr",
-    "google.de",
-    "2.17.140.1"
-  ],
-
-  "commands": [
-    {
-      "command": "paris-traceroute"
-    }
+{
+  "ple1.planet-lab.eu": []
 
 
-  ]
-}]
+
+}
